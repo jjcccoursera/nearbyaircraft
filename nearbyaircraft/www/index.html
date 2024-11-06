@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    @media (min-width: 768px) {
+      body {
+        max-width: 414px;
+        margin: 0 auto;
+      }
+    }
+    body {
+        background-color: rgba(161, 196, 133, 0.2)
+    }
+  </style>
+  <title>Aircraft nearby</title>
+</head>
+<body>
+  <table id="Cab" style="width: 100%; font-family: arial">
+    <tr style="color: white; background-color: green; border: 3px solid green;
+                font-family:arial; font-size: 20px">
+        <td width="100%" style="padding: 20px">
+            <div style="color:rgb(128, 248, 128); text-align: center">
+                <b> Aircraft nearby </b>
+            </div>
+        </td>
+    </tr>
+  </table>
+  <p>  </p>
+  <div style="color: green"><p></p>
+  Set/Edit a reference location...<br />
+  ... and get a list of nearby aircraft's details<br />
+  ... including distance from location
+  <p></p></div>
+  <div style="font-size:12px">See Matthias Schäfer, Martin Strohmeier, Vincent Lenders, Ivan Martinovic and Matthias Wilhelm.<br />
+  "Bringing Up OpenSky: A Large-scale ADS-B Sensor Network for Research".<br />
+  In Proceedings of the 13th IEEE/ACM International Symposium on Information Processing in Sensor Networks (IPSN), pages 83-94, April 2014.</div>
+  <p>
+  <button onclick="getLocation()" id="getLocation" style="color: white; background-color: green; border: 0px; border-radius: 10px;
+    transition: 'all ease-in-out 0.1s'; cursor: pointer"
+    title='Used only to populate fields below. Not retained by site.'>Get My Location</button>
+  <p></p>
+
+  <label for="latitude">Latitude:</label>
+  <input type="text" id="latitude" placeholder="Enter latitude">
+
+  <p></p>
+  <label for="longitude">Longitude:</label>
+  <input type="text" id="longitude" placeholder="Enter longitude">
+
+  <p></p>
+  <label for="altitude">Altitude (meters):</label>
+  <input type="number" id="altitude" placeholder="Enter altitude">
+
+  <p></p>
+  <button onclick="useNotionalLocation()" style="color: white; background-color: green; border: 0px; border-radius: 10px">Use Location</button>
+  <p id="result"></p>
+
+  <table>
+    <thead>
+      <tr style="color: green">
+        <th><u> Callsign       </u></th>
+        <th><u> Country       </u></th>
+        <th><u> Distance     </u></th>
+        <th><u> Altitude    </u></th>
+        <th><u> Climbing  </u></th>
+      </tr>
+    </thead>
+    <tbody id="aircraftData" style="text-align:right;"></tbody>
+  </table>
+
+  <script>
+
+    async function fetchAircraftData(lat, long) {
+      const url = "https://opensky-network.org/api/states/all?lamin="+(lat-0.5)+"&lomin="+(long-0.5)+"&lamax="+(lat+0.5)+"&lomax="+(long+0.5);
+
+
+      try {
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+
+        const data = await response.json();
+        console.log(data.states);
+        const tableBody = document.getElementById('aircraftData');
+        while (tableBody.hasChildNodes()) {
+          tableBody.removeChild(tableBody.lastChild);
+        }
+
+        const row = document.createElement('tr');
+        const dat = Date(data.time*1000);
+        row.innerHTML = `
+          <td colspan="5">${dat.slice(0,25)}</td>
+        `;
+        // tableBody.appendChild(row);
+        if (data.states == null) {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>No aircraft nearby</td>
+          `;
+          tableBody.appendChild(row);
+        } else {
+          data.states.forEach(state => {
+            const row = document.createElement('tr');
+            const distance = calculate3DDistance(lat, long, 0, state[6], state[5], state[13]);
+            console.log(distance);
+            let alt = "n.a.";
+            if (state[13] !== null) {
+              alt = state[13];
+            }
+            let rate = "n.a.";
+            if (state[11] !== null) {
+              rate = state[11].toFixed(1);
+            }
+            row.innerHTML = `
+              <td style="color: green">${state[1]}</td>
+              <td>${state[2]}  </td>
+              <td style="color: green">${distance.toLocaleString('en-US', {maximumFractionDigits:1})}</td>
+              <td>${alt.toLocaleString('en-US', {maximumFractionDigits:1})}</td>
+              <td>${rate}</td>
+            `;
+            tableBody.appendChild(row);
+          });
+        }
+        const sep = document.createElement('tr');
+        sep.innerHTML = `
+          <td colspan="5">${dat.slice(0,25)}</td>
+        `;
+        tableBody.appendChild(sep);
+        return data.states;
+
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    }
+
+    function calculate3DDistance(lat1, lon1, alt1, lat2, lon2, alt2) {
+      const R = 6371e3; // Earth's radius in meters
+      const phi1 = lat1 * Math.PI / 180;
+      const phi2 = lat2 * Math.PI / 180;
+      const deltaphi = (lat2 - lat1) * Math.PI / 180;
+      const deltalambda = (lon2 - lon1) * Math.PI / 180;
+
+      const a = Math.sin(deltaphi / 2) * Math.sin(deltaphi / 2) +
+              Math.cos(phi1) * Math.cos(phi2) *
+              Math.sin(deltalambda / 2) * Math.sin(deltalambda / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+      const d = R * c; // Distance on the surface
+      const altDiff = alt2 - alt1; // Altitude difference
+
+      const distance3D = Math.sqrt(d * d + altDiff * altDiff);
+      console.log(deltaphi, deltalambda, a, c, d, distance3D);
+      return distance3D;
+    }
+
+    function useNotionalLocation() {
+      const latitude = parseFloat(document.getElementById('latitude').value.replace(",","."));
+      const longitude = parseFloat(document.getElementById('longitude').value.replace(",","."));
+      const altitude = parseFloat(document.getElementById('altitude').value.replace(",","."));
+
+      if (isNaN(latitude) || isNaN(longitude) || isNaN(altitude) ||
+            latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+        alert('Please enter valid latitude, longitude and altitude values.');
+        return;
+      }
+
+      // Now you can use the provided latitude and longitude
+      document.getElementById('result').textContent = `Using latitude: ${latitude}, longitude: ${longitude}, altitude: ${altitude} ...`;
+      fetchAircraftData(latitude, longitude);
+    }
+
+    function getLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(success, error);
+        // Now you can use the provided latitude and longitude
+
+        // You can proceed with calculations or API calls using these coordinates
+        // ...
+      } else {
+        alert("Geolocation is not supported by this browser.");
+        return;
+      }
+    }
+
+    const getLocationButton = document.getElementById('getLocation');
+
+    function success(pos) {
+        const crd = pos.coords;
+        document.getElementById('latitude').value = crd.latitude;
+        document.getElementById('longitude').value = crd.longitude;
+        document.getElementById('altitude').value = 0;
+        const altitude = 0;
+        document.getElementById('result').textContent = `Using latitude: ${crd.latitude}, longitude: ${crd.longitude}, altitude: ${altitude} ...`;
+        console.log("Your current position is:");
+        console.log(`Latitude : ${crd.latitude}`);
+        console.log(`Longitude: ${crd.longitude}`);
+        console.log(`More or less ${crd.accuracy} meters.`);
+        fetchAircraftData(crd.latitude,crd.longitude);
+        return crd;
+    }
+
+    function error(err) {
+        console.warn(`ERROR(${err.code}): ${err.message}`);
+        alert("HTTPS required! Please switch to https://nearbyaircraft.ew.r.appspot.com/ .")
+    }
+
+
+  </script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+runtime: nodejs20
+env: standard
+
+handlers:
+- url: /
+  static_files: www/index.html
+  mime_type: text/html
+  upload: www/index.html
+
+- url: /.*
+  static_files: auto
+  upload: www/.*

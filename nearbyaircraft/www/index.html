@@ -71,7 +71,7 @@
 
   <script>
 
-    async function fetchAircraftData(lat, long) {
+    async function fetchAircraftData(lat, long, alt) {
       const url = "https://opensky-network.org/api/states/all?lamin="+(lat-0.5)+"&lomin="+(long-0.5)+"&lamax="+(lat+0.5)+"&lomax="+(long+0.5);
 
 
@@ -106,9 +106,9 @@
             const row = document.createElement('tr');
             const distance = calculate3DDistance(lat, long, 0, state[6], state[5], state[13]);
             console.log(distance);
-            let alt = "n.a.";
+            let altit = "n.a.";
             if (state[13] !== null) {
-              alt = state[13];
+              altit = state[13];
             }
             let rate = "n.a.";
             if (state[11] !== null) {
@@ -169,7 +169,7 @@
 
       // Now you can use the provided latitude and longitude
       document.getElementById('result').textContent = `Using latitude: ${latitude}, longitude: ${longitude}, altitude: ${altitude} ...`;
-      fetchAircraftData(latitude, longitude);
+      fetchAircraftData(latitude, longitude, altitude);
     }
 
     function getLocation() {

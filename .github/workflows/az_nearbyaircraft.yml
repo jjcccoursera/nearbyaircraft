@@ -6,6 +6,10 @@ on:
       - az
   workflow_dispatch:
 
+permissions: 
+  id-token: write 
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -47,11 +51,8 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_ACFA9E616F2D49F0995FB36AC1BBEEB6 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_0CCA6A7E28734DAA8386C8EE042B6FDE }}
-          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_014C4F000B8046CCB9B0AFAC9D4E2AB4 }}
-
+          creds: ${{ secrets.AZURE_CREDENTIALS }} 
+          
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3

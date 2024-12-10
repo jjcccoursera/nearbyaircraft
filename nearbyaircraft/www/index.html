@@ -94,7 +94,6 @@
         row.innerHTML = `
           <td colspan="5">${dat.slice(0,25)}</td>
         `;
-        // tableBody.appendChild(row);
         if (data.states == null) {
           const row = document.createElement('tr');
           row.innerHTML = `
@@ -175,10 +174,6 @@
     function getLocation() {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(success, error);
-        // Now you can use the provided latitude and longitude
-
-        // You can proceed with calculations or API calls using these coordinates
-        // ...
       } else {
         alert("Geolocation is not supported by this browser.");
         return;

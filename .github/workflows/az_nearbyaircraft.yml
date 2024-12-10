@@ -13,17 +13,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: List directory contents for debugging
+      - name: List root directory contents
         run: ls -al
 
+      - name: List contents of nearbyaircraft directory
+        run: |
+          if [ -d "nearbyaircraft" ]; then
+            ls -al nearbyaircraft
+          else
+            echo "Directory nearbyaircraft does not exist."
+            exit 1
+          fi
+
       - name: Zip artifact for deployment
-        run: zip -r release.zip www
+        run: |
+          cd nearbyaircraft
+          zip -r release.zip www
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: static-app
-          path: release.zip
+          path: nearbyaircraft/release.zip
 
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
@@ -31,7 +42,7 @@ jobs:
           name: static-app
 
       - name: Unzip artifact for deployment
-        run: unzip release.zip
+        run: unzip nearbyaircraft/release.zip
 
       - name: Login to Azure
         uses: azure/login@v2

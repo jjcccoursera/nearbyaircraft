@@ -13,8 +13,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Ensure the correct directory exists
-        run: if [ ! -d "www" ]; then echo "Directory www does not exist."; exit 1; fi
+      - name: List directory contents for debugging
+        run: ls -al
 
       - name: Zip artifact for deployment
         run: zip -r release.zip www

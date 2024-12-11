@@ -1,53 +1,46 @@
-name: Deploy static web app to Azure Web App - nearbyaircraft
+name: Azure Static Web Apps CI/CD
 
 on:
   push:
     branches:
-      - az
-  workflow_dispatch:
-
-permissions:
-  id-token: write
-  contents: read
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches:
+      - main
 
 jobs:
-  deploy:
+  build_and_deploy_job:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
-
+    name: Build and Deploy Job
     steps:
-      - uses: actions/checkout@v4
-
-      - name: List root directory contents
-        run: ls -al
-
-      - name: Zip artifact for deployment
-        run: |
-          cd nearbyaircraft
-          zip -r release.zip *
-
-      - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v4
+      - uses: actions/checkout@v3
         with:
-          name: static-app
-          path: nearbyaircraft/release.zip
-
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v4
+          submodules: true
+          lfs: false
+      - name: Build And Deploy
+        id: builddeploy
+        uses: Azure/static-web-apps-deploy@v1
         with:
-          name: static-app
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_KIND_ROCK_0746C8D1E }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for Github integrations (i.e. PR comments)
+          action: "upload"
+          ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
+          # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
+          app_location: "/" # App source code path
+          api_location: "" # Api source code path - optional
+          output_location: "." # Built app content directory - optional
+          ###### End of Repository/Build Configurations ######
 
-      - name: Unzip artifact for deployment
-        run: unzip nearbyaircraft/release.zip -d site
-
-      - name: Login to Azure
-        uses: azure/login@v2
+  close_pull_request_job:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    name: Close Pull Request Job
+    steps:
+      - name: Close Pull Request
+        id: closepullrequest
+        uses: Azure/static-web-apps-deploy@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Deploy to Azure Web App
-        id: deploy-to-webapp
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: 'nearbyaircraft'
-          slot-name: 'Production'
-          package: site
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_KIND_ROCK_0746C8D1E }}
+          action: "close"

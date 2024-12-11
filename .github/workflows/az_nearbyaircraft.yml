@@ -29,6 +29,9 @@ jobs:
             exit 1
           fi
 
+      - name: Create site/wwwroot directory
+        run: mkdir -p site/wwwroot
+
       - name: Zip artifact for deployment
         run: |
           cd nearbyaircraft

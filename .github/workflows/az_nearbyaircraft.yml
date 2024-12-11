@@ -6,8 +6,8 @@ on:
       - az
   workflow_dispatch:
 
-permissions: 
-  id-token: write 
+permissions:
+  id-token: write
   contents: read
 
 jobs:
@@ -46,17 +46,17 @@ jobs:
           name: static-app
 
       - name: Unzip artifact for deployment
-        run: unzip nearbyaircraft/release.zip
+        run: unzip nearbyaircraft/release.zip -d site/wwwroot
 
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }} 
-          
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'nearbyaircraft'
           slot-name: 'Production'
-          package: .
+          package: site/wwwroot

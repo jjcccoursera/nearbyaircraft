@@ -37,7 +37,7 @@ jobs:
           name: static-app
 
       - name: Unzip artifact for deployment
-        run: unzip nearbyaircraft/release.zip -d site/wwwroot
+        run: unzip nearbyaircraft/release.zip -d site
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -50,4 +50,4 @@ jobs:
         with:
           app-name: 'nearbyaircraft'
           slot-name: 'Production'
-          package: site/wwwroot
+          package: site

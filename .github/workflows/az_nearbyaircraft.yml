@@ -50,4 +50,4 @@ jobs:
         with:
           app-name: 'nearbyaircraft'
           slot-name: 'Production'
-          package: .
+          

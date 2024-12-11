@@ -3,11 +3,11 @@ env: standard
 
 handlers:
 - url: /api
-  static_files: www/api.html
+  static_files: api.html
   mime_type: text/html
-  upload: www/api.html
+  upload: api.html
 - url: /.*
-  static_files: www/index.html
+  static_files: index.html
   mime_type: text/html
-  upload: www/index.html
+  upload: index.html
 

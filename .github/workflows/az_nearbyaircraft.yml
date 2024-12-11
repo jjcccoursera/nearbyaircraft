@@ -20,22 +20,10 @@ jobs:
       - name: List root directory contents
         run: ls -al
 
-      - name: List contents of nearbyaircraft directory
-        run: |
-          if [ -d "nearbyaircraft" ]; then
-            ls -al nearbyaircraft
-          else
-            echo "Directory nearbyaircraft does not exist."
-            exit 1
-          fi
-
-      - name: Create site/wwwroot directory
-        run: mkdir -p site/wwwroot
-
       - name: Zip artifact for deployment
         run: |
           cd nearbyaircraft
-          zip -r release.zip www
+          zip -r release.zip *
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4

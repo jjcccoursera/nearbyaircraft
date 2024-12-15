@@ -12,6 +12,8 @@ const __dirname = dirname(__filename);
 const app = express();
 const port = process.env.PORT || 8080; // Use environment variable for port
 
+console.log(`Starting server on port ${port}`); // Add this line
+
 // Function to calculate 3D distance (same as in api.html)
 function calculate3DDistance(lat1, lon1, alt1, lat2, lon2, alt2) {
   const R = 6371e3; // Earth's radius in meters

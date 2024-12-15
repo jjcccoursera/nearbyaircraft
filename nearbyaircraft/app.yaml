@@ -2,7 +2,9 @@ runtime: nodejs18
 env: standard
 
 handlers:
-- url: /api
+- url: /api/*
+  script: auto
+- url: /fakeapi
   static_files: www/api.html
   mime_type: text/html
   upload: www/api.html

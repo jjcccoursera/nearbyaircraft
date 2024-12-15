@@ -10,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-const port = process.env.PORT || 3001; // Use environment variable for port
+const port = process.env.PORT || 8080; // Use environment variable for port
 
 // Function to calculate 3D distance (same as in api.html)
 function calculate3DDistance(lat1, lon1, alt1, lat2, lon2, alt2) {

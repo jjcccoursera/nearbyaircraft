@@ -9,6 +9,8 @@
 
   <script>
 
+    // https://gemini.google.com/app/88ddc955db8ce008
+
     async function fetchAircraftData(lat, long, alt) {
       const url = "https://opensky-network.org/api/states/all?lamin="+(lat-0.5)+"&lomin="+(long-0.5)+"&lamax="+(lat+0.5)+"&lomax="+(long+0.5);
       r = document.getElementById('resultados');

@@ -9,6 +9,16 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception:', err);
+    process.exit(1);  // Exit the process to avoid unexpected behavior
+});
+
+process.on('unhandledRejection', (err) => {
+    console.error('Unhandled Rejection:', err);
+    process.exit(1);  // Exit the process to avoid unexpected behavior
+});
+
 const app = express();
 const port = process.env.PORT || 8080; // Use environment variable for port
 

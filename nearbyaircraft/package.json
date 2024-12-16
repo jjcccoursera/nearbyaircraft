@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "Lists details of aircraft currently near a reference point defined by latitude, longitude and altitude, e.g. callsign, distance to reference, climbing rate.",
   "type": "module",
-  "main": "index.js",
   "engines": {
     "node": "18.x"
   },

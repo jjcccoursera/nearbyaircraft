@@ -7,7 +7,7 @@
     "node": "18.x"
   },
   "scripts": {
-    "start": "node api/api.js",
+    "start": "node api/teste.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

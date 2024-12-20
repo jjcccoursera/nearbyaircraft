@@ -84,13 +84,13 @@ app.get('/api', async (req, res) => {
       if (state[11] !== null) {
         rate = state[11].toFixed(1);
       }
-      return [state[1], state[2], distance, altit, rate];
+      return [state[1], state[2], distance.toFixed(1), altit, rate, state[6], state[5], state[9]*3.6, state[17]];
     });
 
     const jsonObject = {
         timestamp: Date(data.time * 1000),
         latlongalt: [parseFloat(lat), parseFloat(long), parseFloat(alt)],
-        header: ["Callsign", "Country", "Distance", "Altitude", "Climbing"],
+        header: ["Callsign", "Country", "Distance", "Altitude", "Climbing", "Latitude", "Longitude", "Velocidade", "Tipo"],
         aircraft: resultados,
         urlsource: "https://opensky-network.org/api/",
         source: "See Matthias Schäfer, Martin Strohmeier, Vincent Lenders, Ivan Martinovic and Matthias Wilhelm. Bringing Up OpenSky: A Large-scale ADS-B Sensor Network for Research. In Proceedings of the 13th IEEE/ACM International Symposium on Information Processing in Sensor Networks (IPSN), pages 83-94, April 2014."

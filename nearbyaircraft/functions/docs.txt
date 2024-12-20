@@ -1,0 +1,39 @@
+https://copilot.microsoft.com/chats/FdS5auQFCLabPHYAmVKeP
+https://gemini.google.com/app/708e79f1127426b3
+
+1. Criar os tópicos
+
+    gcloud pubsub topics create recolheVoos
+
+    gcloud pubsub topics create distMin
+
+2. Criar as funções
+
+    cd nearbyaircraft/functions/recolheVoos
+    gcloud functions deploy recolheVoos 
+        --runtime python39
+        --trigger-topic recolheVoos 
+        --project nearbyaircraft 
+        --entry-point recolheVoos
+
+    cd nearbyaircraft/functions/distMin
+    gcloud functions deploy distMin 
+        --runtime python39
+        --trigger-topic distMin 
+        --project nearbyaircraft 
+        --entry-point distMin
+
+3. Criar os gatilhos
+
+    gcloud scheduler jobs create pubsub recolheVoos     
+        --schedule "*/1 5-7 * * *"     
+        --time-zone "Europe/Lisbon"     
+        --topic projects/nearbyaircraft/topics/recolheVoos     
+        --message-body "{}"
+        
+    gcloud scheduler jobs create pubsub distMin     
+        --schedule "00 08 * * *"     
+        --time-zone "Europe/Lisbon"     
+        --topic projects/nearbyaircraft/topics/distMin     
+        --message-body "{}"
+

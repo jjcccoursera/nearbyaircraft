@@ -2,14 +2,26 @@ runtime: nodejs18
 env: standard
 
 handlers:
+# Serve static files in /icons/ folder
+- url: /icons
+  static_dir: www/icons
 - url: /api/*
   script: auto
 - url: /fakeapi
   static_files: www/api.html
   mime_type: text/html
   upload: www/api.html
+- url: /madrug
+  static_files: www/madrug.html
+  mime_type: text/html
+  upload: www/madrug.html
 - url: /.*
   static_files: www/index.html
   mime_type: text/html
   upload: www/index.html
 
+runtime_config: 
+  python_version: 3 
+
+# Ensure dependencies are installed 
+entrypoint: npm start

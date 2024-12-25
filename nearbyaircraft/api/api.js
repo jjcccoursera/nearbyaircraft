@@ -101,39 +101,6 @@ app.get('/madrug', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'www', 'madrug.html')); 
 }); 
 
-// API endpoint to get closest flights from BigQuery 
- /* app.get('/flights', (req, res) => { 
-  console.log("Received request to /flights endpoint"); 
-  console.log(`Current working directory: ${__dirname}`); // Log the current working directory 
-  const scriptPath = path.join(__dirname, '../nearbyaircraft/functions/madrug/madrug.py'); 
-  console.log(`Constructed script path: ${scriptPath}`); // Log the constructed path for debugging 
-  const command = `python3 -c "from google.cloud import bigquery; print('BigQuery module imported')"`; 
-  // const command = `python3 /workspace/functions/madrug/madrug.py`; 
-  console.log(`Command: ${command}`); // Log the command for debugging 
-  exec(command, { timeout: 5000 }, (error, stdout, stderr) => { 
-    console.log("Inside exec callback"); 
-    if (error) { 
-      console.error(`Error executing Python script: ${error}`); 
-      return res.status(500).send("Error executing Python script: ${error.message}"); 
-    } 
-    
-    if (stderr) { 
-      console.error(`stderr: ${stderr}`); 
-      return res.status(500).send("Error in Python script: ${stderr}`."); 
-    } 
-    
-    try { 
-      console.log(`stdout: ${stdout}`); // Log stdout to see the output
-      const flights = JSON.parse(stdout); 
-      res.json(flights); 
-    } 
-    catch (err) { 
-      console.error(`Error parsing JSON: ${err}`); 
-      res.status(500).send("`Error parsing JSON: ${err.message}`"); 
-    } 
-  }); 
-}); */
-
 // Handle other requests
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname,  '..','www', 'index.html'));

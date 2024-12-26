@@ -36,6 +36,14 @@
     <br />Sobrevoando imediações <br />do Garcia / Parque Cidade (entrada Sul)<br />
     <br /><p></p><p></p>
   </div>
+  <div>
+    <!-- Button to open the map in a new tab -->
+    <button id="trigger-button" 
+      style="color:white; background-color: green;
+      border: 0px; border-radius: 10px; font-size: 15px; padding: 7px">
+      <b> Mapa com voos</b> 
+    </button>
+  </div>
   <div style="text-align: right">
     <img src="icons/back.png" alt="back" width="24" onclick="back()">
     <img src="icons/forward.png" alt="forw" width="24" onclick="forward()">
@@ -68,6 +76,11 @@
 
   <script>
 
+    document.getElementById('trigger-button').addEventListener('click', () => {
+      // Open the /flightPaths page in a new tab
+      window.open('/mapa', '_blank');
+    });
+    
     function back() {
       if (coluna == 0) {return};
       coluna -=1;
@@ -140,7 +153,7 @@
           row.innerHTML = `
             <td style="color: green">${voo['data']}</td>
             <td style="color: green" align=left>${voo['call_sign']}</td>
-            <td style="color: green; font-size: 10px " class="Um">${voo['country']}  </td>
+            <td style="color: green; font-size: 10px " class="Um">${voo['country'].slice(-12)}  </td>
             <td style="color: green; text-align: center" class="Dois">${voo['distance'].toLocaleString('en-US', {maximumFractionDigits:0})}</td>
             <td style="color: green; text-align: center" class="Três">${voo['altitude'].toLocaleString('en-US', {maximumFractionDigits:0})}</td>
             <td style="color: green" class="Quatro">${voo['climbing_rate']}</td>

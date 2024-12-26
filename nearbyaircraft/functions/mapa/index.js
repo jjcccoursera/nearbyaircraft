@@ -22,16 +22,29 @@ exports.flightPaths = async (req, res) => {
   }
 
   try {
+    // Get the current date and time
+    const now = new Date();
+
+    // Determine if we should query yesterday's flights
+    const queryTime = new Date().setHours(8, 15, 0, 0); // 8:15 AM in milliseconds
+    queryDate = now.toISOString().slice(0, 10);
+    if (now.getTime() < queryTime) {
+      const yesterday = new Date(now.getTime() - (1000 * 60 * 60 * 24));
+      queryDate = yesterday.toISOString().slice(0, 10); // YYYY-MM-DD format
+    }
+    console.log("Query date:", queryDate);
+
     const query = `
       SELECT
         call_sign,
         timestamp,
         latitude,
-        longitude
+        longitude,
+        altitude,
+        climbing_rate,
+        velocidade
       FROM \`nearbyaircraft.voos.brutos\`
-      WHERE TIMESTAMP(timestamp) BETWEEN 
-        TIMESTAMP(CURRENT_DATE(), "UTC") + INTERVAL 5 HOUR
-        AND TIMESTAMP(CURRENT_DATE(), "UTC") + INTERVAL 7 HOUR
+      WHERE DATE(timestamp) = '${queryDate}'
       ORDER BY call_sign, timestamp
     `;
 

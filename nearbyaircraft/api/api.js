@@ -101,6 +101,36 @@ app.get('/madrug', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'www', 'madrug.html')); 
 }); 
 
+// Serve the mapa.html file for the /mapa URL 
+app.get('/mapa', (req, res) => { 
+  res.setHeader('Cache-Control', 'no-store'); 
+  res.sendFile(path.join(__dirname, '..', 'www', 'mapa.html')); 
+}); 
+
+// New endpoint to fetch flight path data from Google Cloud Function
+app.get('/flightPaths', async (req, res) => {
+  try {
+    // URL of the flightPaths function deployed on Google Cloud
+    const flightPathsUrl = 'https://europe-southwest1-nearbyaircraft.cloudfunctions.net/flightPaths';
+    
+    // Fetch data from the Cloud Function
+    const response = await fetch('https://europe-southwest1-nearbyaircraft.cloudfunctions.net/flightPaths');
+    
+    if (!response.ok) {
+      return res.status(response.status).json({ error: `Failed to fetch flight paths: ${response.statusText}` });
+    }
+
+    const data = await response.json();
+    console.log(data);
+    
+    // Process the data or return it as-is to the client
+    res.json(data); // Return the flight path data in JSON format
+  } catch (error) {
+    console.error('Error fetching flight paths:', error);
+    res.status(500).json({ error: 'Error fetching flight paths' });
+  }
+});
+
 // Handle other requests
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname,  '..','www', 'index.html'));

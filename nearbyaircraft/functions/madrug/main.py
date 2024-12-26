@@ -47,8 +47,8 @@ def madrug(request):
         query = f""" SELECT * FROM (
                         SELECT FORMAT_TIMESTAMP('%d-%m  %H:%M:%S', timestamp, 'UTC-1') AS data, *, 
                         ROW_NUMBER() OVER (PARTITION BY call_sign ORDER BY distance) AS row_num 
-                        FROM voos.distancias)
-                     WHERE row_num = 1 AND DATE(timestamp) = '{query_date}' AND distance < 3000
+                        FROM voos.distancias WHERE DATE(timestamp) = '{query_date}')
+                     WHERE row_num = 1 AND distance < 3000
                      ORDER BY data; 
                 """ 
                 

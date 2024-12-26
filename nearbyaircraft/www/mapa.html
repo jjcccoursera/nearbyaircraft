@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mapa com voos</title>
+  <!-- Include Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    #map {
+      height: 100vh; /* Full-page map */
+      width: 100%; /* Full screen width */
+    }
+    .tooltip-timestamp {
+      font-size: 12px;
+      background: white;
+      padding: 2px;
+      border-radius: 3px;
+    }
+    .leaflet-tile-container {
+      filter: grayscale(100%);
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <!-- Include Leaflet JavaScript -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    // Fetch data and initialize the map
+    async function initializeMap() {
+      // Fetch last day's flight records
+      const response = await fetch('/flightPaths'); // Backend endpoint to serve flight data
+      const flightData = await response.json();
+      console.log(flightData);
+
+      // Initialize the map and set its view to Casa da Música with a zoom level of 13
+      const map = L.map('map').setView([41.1579, -8.6291], 13);
+
+      // Add OpenStreetMap tiles
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+
+      // Process and display flight paths
+      const colors = ['red', 'blue', 'green', 'orange', 'purple', 'yellow', 'pink', 'black'];
+      let colorIndex = 0;
+
+      for (const callsign in flightData) {
+        const records = flightData[callsign];
+        const latlngs = records.map(record => [record.latitude, record.longitude]);
+        console.log(records);
+
+        // Draw flight path
+        const polyline = L.polyline(latlngs, { color: colors[colorIndex++ % colors.length] }).addTo(map);
+
+        // Add hoverable markers for timestamps
+        records.forEach(record => {
+          const marker = L.circleMarker([record.latitude, record.longitude], {
+            radius: 5,
+            color: 'black',
+          }).addTo(map);
+
+          // Check and format the timestamp
+          let formattedTimestamp = 'N/A';
+          if (record.timestamp && record.timestamp.value) {
+            try {
+              // Parse the timestamp string and create a new Date object
+              const date = new Date(record.timestamp.value);
+              
+              // Ensure the date was parsed correctly
+              if (isNaN(date)) {
+                console.error('Invalid date:', record.timestamp.value);
+              } else {
+                // Convert the timestamp to Lisbon time
+                formattedTimestamp = date.toLocaleString('en-GB', { timeZone: 'Europe/Lisbon' });
+              }
+            } catch (error) {
+              console.error('Error parsing timestamp:', record.timestamp.value, error);
+            }
+          } else {
+            console.warn('Timestamp missing or invalid for record:', record);
+          }
+        
+          // Tooltip for timestamp (on hover)
+          marker.bindTooltip(
+            `<span class="tooltip-timestamp">${formattedTimestamp}</span>`,
+            { permanent: false, direction: 'top' }
+          );
+
+          // Popup for detailed information (on click)
+          marker.bindPopup(
+            `<b>Call sign:</b> ${record.call_sign || 'N/A'} <br> 
+             <b>Data:</b> ${formattedTimestamp || 'N/A'} <br>
+             <b>Altitude:</b> ${record.altitude || 'N/A'} <br>
+             <b>m/s:</b> ${record.climbing_rate || 'N/A'} <br>
+             <b>Velocidade:</b> ${record.velocidade || 'N/A'} <br>`
+          );
+        });
+
+      }
+    }
+
+    // Initialize map after page load
+    initializeMap();
+  </script>
+</body>
+</html>

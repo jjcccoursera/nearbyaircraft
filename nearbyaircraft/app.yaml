@@ -2,9 +2,10 @@ runtime: nodejs18
 env: standard
 
 handlers:
-# Serve static files in /icons/ folder
 - url: /icons
   static_dir: www/icons
+- url: /flightPaths
+  script: auto
 - url: /api/*
   script: auto
 - url: /fakeapi
@@ -15,13 +16,11 @@ handlers:
   static_files: www/madrug.html
   mime_type: text/html
   upload: www/madrug.html
+- url: /mapa
+  static_files: www/mapa.html
+  mime_type: text/html
+  upload: www/mapa.html
 - url: /.*
   static_files: www/index.html
   mime_type: text/html
   upload: www/index.html
-
-runtime_config: 
-  python_version: 3 
-
-# Ensure dependencies are installed 
-entrypoint: npm start

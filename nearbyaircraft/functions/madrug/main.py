@@ -2,6 +2,17 @@ from google.cloud import bigquery
 from datetime import datetime, timedelta 
 import requests 
 
+"""
+    Retrieves flight data from BigQuery, optionally filtered by 'dia' parameter.
+
+    Args:
+        request (google.cloud.functions.HttpRequest): The request object.
+            <https://cloud.google.com/functions/docs/reference/rest/v1/projects.locations.functions/call>
+
+    Returns:
+        The response text, status code and headers.
+    """
+
 def convert_datetime_to_string(flights): 
     for flight in flights: 
         for key, value in flight.items(): 
@@ -31,37 +42,44 @@ def madrug(request):
     else:
         print('Valid method, GET')
     
-    try: # Initialize a BigQuery client 
+    # Get the current date and time 
+    current_datetime = datetime.now()             
+    # Determine if we should query yesterday's flights 
+    if current_datetime.time() < datetime.strptime('08:15', '%H:%M').time(): 
+        query_date = (current_datetime - timedelta(days=1)).strftime('%Y-%m-%d') 
+    else: 
+        query_date = current_datetime.strftime('%Y-%m-%d') 
+
+    if 'dia' in request.args:
+        try:
+            datetime.strptime(request.args['dia'], "%Y-%m-%d")  # Attempt to parse the date
+            query_date = request.args['dia'] 
+        except ValueError:
+            # Log invalid date (optional)
+            print(f"Invalid date format for 'dia': {request.args['dia']}. Using default date.") 
+                            
+    # Define the SQL query 
+    query = f""" SELECT * FROM (
+                    SELECT FORMAT_TIMESTAMP('%d-%m  %H:%M:%S', timestamp, 'UTC') AS data, *, 
+                    ROW_NUMBER() OVER (PARTITION BY call_sign ORDER BY distance) AS row_num 
+                    FROM voos.distancias WHERE DATE(timestamp) = '{query_date}')
+                    WHERE row_num = 1 AND distance < 3000
+                    ORDER BY data; 
+            """ 
+
+    try:
+        # Initialize a BigQuery client 
         client = bigquery.Client() 
         
-        # Get the current date and time 
-        current_datetime = datetime.now() 
-        
-        # Determine if we should query yesterday's flights 
-        if current_datetime.time() < datetime.strptime('08:15', '%H:%M').time(): 
-            query_date = (current_datetime - timedelta(days=1)).strftime('%Y-%m-%d') 
-        else: 
-            query_date = current_datetime.strftime('%Y-%m-%d') 
-            
-        # Define the SQL query 
-        query = f""" SELECT * FROM (
-                        SELECT FORMAT_TIMESTAMP('%d-%m  %H:%M:%S', timestamp, 'UTC-1') AS data, *, 
-                        ROW_NUMBER() OVER (PARTITION BY call_sign ORDER BY distance) AS row_num 
-                        FROM voos.distancias WHERE DATE(timestamp) = '{query_date}')
-                     WHERE row_num = 1 AND distance < 3000
-                     ORDER BY data; 
-                """ 
-                
-        # Execute the query 
-        
+        # Execute the query         
         query_job = client.query(query) 
         results = query_job.result() 
         
         # Collect the results 
         flights = [dict(row) for row in results] 
         flights = convert_datetime_to_string(flights)
-        return (flights, 200, headers) 
-        
+        return (flights, 200, headers)     
+    
     except Exception as e: 
         print(f"Error: {e}") 
         error_response = {'error': 'An unexpected error occurred.', 'details': str(e)}

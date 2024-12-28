@@ -91,7 +91,8 @@
       const dia = document.getElementById('dia').value;
       madrug(show,'?dia='+dia);
     }
-    
+
+
     function back() {
       if (coluna == 0) {return};
       coluna -=1;
@@ -216,6 +217,11 @@
     
     if (window.location.protocol !== "https:") { 
       alert("Pf mude para https!");
+    }
+
+    window.onload = function() { 
+      const inputField = document.getElementById('dia'); 
+      inputField.value = inputField.defaultValue; 
     }
     
     const show = ['Um', 'Dois', 'Três', 'Quatro', 'Cinco', 'Seis', 'Sete'];

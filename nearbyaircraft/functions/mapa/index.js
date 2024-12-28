@@ -34,6 +34,17 @@ exports.flightPaths = async (req, res) => {
     }
     console.log("Query date:", queryDate);
 
+    console.log("Request URL:", req.url); // Extract query parameters from URL 
+    const url = new URL(req.url, `http://${req.headers.host}`); 
+    const dia = url.searchParams.get('dia'); 
+    console.log("Dia from manually parsed URL:", dia);
+    
+    // Validate input parameter, if valid update queryDate
+    const date = new Date(dia);
+    if (date instanceof Date && !isNaN(date) && dia === date.toISOString().split('T')[0]) {
+      queryDate = dia;
+    }
+    
     const query = `
       SELECT
         call_sign,

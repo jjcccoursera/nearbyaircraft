@@ -110,11 +110,33 @@ app.get('/mapa', (req, res) => {
 // New endpoint to fetch flight path data from Google Cloud Function
 app.get('/flightPaths', async (req, res) => {
   try {
-    // URL of the flightPaths function deployed on Google Cloud
-    const flightPathsUrl = 'https://europe-southwest1-nearbyaircraft.cloudfunctions.net/flightPaths';
+    // Extract the 'dia' query parameter from the request 
+    let { dia } = req.query; 
+    // If 'dia' is not provided, set it to the current date in 'YYYY-MM-DD' format 
+    if (!dia) { 
+      const now = new Date(); 
+      let today = new Date(); 
+      // Check if the current time is before 8:15 AM 
+      if (now.getHours() < 8 || (now.getHours() === 8 && now.getMinutes() < 15)) { 
+        // Set today to yesterday's date 
+        today.setDate(today.getDate() - 1); 
+      } 
+      const year = today.getFullYear(); 
+      const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-based, so add 1 
+      const day = String(today.getDate()).padStart(2, '0');
+      /*** const today = new Date(); 
+      const year = today.getFullYear(); 
+      const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-based, so add 1 
+      const day = String(today.getDate()).padStart(2, '0'); */
+      dia = `${year}-${month}-${day}`; 
+    } 
+    console.log(133, dia);
     
-    // Fetch data from the Cloud Function
-    const response = await fetch('https://europe-southwest1-nearbyaircraft.cloudfunctions.net/flightPaths');
+    // URL of the flightPaths function deployed on Google Cloud with the query parameter 
+    const flightPathsUrl = `https://europe-southwest1-nearbyaircraft.cloudfunctions.net/flightPaths?dia=${dia}`; 
+    
+    // Fetch data from the Cloud Function 
+    const response = await fetch(flightPathsUrl);
     
     if (!response.ok) {
       return res.status(response.status).json({ error: `Failed to fetch flight paths: ${response.statusText}` });

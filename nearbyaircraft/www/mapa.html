@@ -29,9 +29,9 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     // Fetch data and initialize the map
-    async function initializeMap() {
+    async function initializeMap(dia) {
       // Fetch last day's flight records
-      const response = await fetch('/flightPaths'); // Backend endpoint to serve flight data
+      const response = await fetch('/flightPaths?dia=' + dia); // Backend endpoint to serve flight data
       const flightData = await response.json();
       console.log(flightData);
 
@@ -103,8 +103,18 @@
       }
     }
 
+    // Get the current URL
+    const urlParams = new URLSearchParams(window.location.search); 
+    
+    // Extract the 'dia' parameter from the URL 
+    const dia = urlParams.get('dia'); 
+    
+    // Log the 'dia' parameter to the console 
+    console.log(111, 'Dia:', dia);
+    
     // Initialize map after page load
-    initializeMap();
+    initializeMap(dia);
+  
   </script>
 </body>
 </html>

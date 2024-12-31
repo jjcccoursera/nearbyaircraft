@@ -12,6 +12,10 @@ handlers:
   static_files: www/api.html
   mime_type: text/html
   upload: www/api.html
+- url: /madrug2
+  static_files: www/madrug2.html
+  mime_type: text/html
+  upload: www/madrug2.html
 - url: /madrug
   static_files: www/madrug.html
   mime_type: text/html

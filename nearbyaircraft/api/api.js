@@ -95,6 +95,12 @@ app.get('/api', async (req, res) => {
     }
 });
 
+// Serve the madrug2.html file for the /madrug URL 
+app.get('/madrug2', (req, res) => { 
+  res.setHeader('Cache-Control', 'no-store'); 
+  res.sendFile(path.join(__dirname, '..', 'www', 'madrug2.html')); 
+}); 
+
 // Serve the madrug.html file for the /madrug URL 
 app.get('/madrug', (req, res) => { 
   res.setHeader('Cache-Control', 'no-store'); 
@@ -124,10 +130,6 @@ app.get('/flightPaths', async (req, res) => {
       const year = today.getFullYear(); 
       const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-based, so add 1 
       const day = String(today.getDate()).padStart(2, '0');
-      /*** const today = new Date(); 
-      const year = today.getFullYear(); 
-      const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-based, so add 1 
-      const day = String(today.getDate()).padStart(2, '0'); */
       dia = `${year}-${month}-${day}`; 
     } 
     console.log(133, dia);
@@ -152,6 +154,7 @@ app.get('/flightPaths', async (req, res) => {
     res.status(500).json({ error: 'Error fetching flight paths' });
   }
 });
+
 
 // Handle other requests
 app.get('*', (req, res) => {

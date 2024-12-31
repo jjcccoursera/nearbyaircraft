@@ -48,6 +48,7 @@ exports.flightPaths = async (req, res) => {
     const query = `
       SELECT
         call_sign,
+        country,
         timestamp,
         latitude,
         longitude,

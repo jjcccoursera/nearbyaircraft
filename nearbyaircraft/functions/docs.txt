@@ -1,6 +1,6 @@
 https://copilot.microsoft.com/chats/FdS5auQFCLabPHYAmVKeP
 https://gemini.google.com/app/708e79f1127426b3
-https://chatgpt.com/c/676844bc-d080-8003-b7e2-3632f28b002b
+https://chatgpt.com/c/676844bc-d080-8003-b7e2-3632f28b002b 
 
 
 1. Criar os tópicos

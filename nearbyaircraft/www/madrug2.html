@@ -33,29 +33,32 @@
   <p>  </p>
   <div style="color: green; font-family:arial; font-size: 20px; text-align: center">
     <p></p><p></p>
-    <br />Sobrevoando imediações de:
+    <br />Sobrevoando, entre as 5 e as 8 da manhã,
+    <br /> as imediações...
     <p></p>
   </div>
   <div style="margin-left: 20px; text-align: center">
-    <label for="coordinates" style="color: green; font-family:arial; font-size: 16px;">
-    <b>Coordenadas (lat, long, alt):</b></label>
+    <label for="coordinates" style="color: green; font-family:arial; font-size: 20px;">
+    de <span style="font-size: 12px">(lat, long, alt):</span> </label>
     <input type="text" id="coordinates" placeholder="e.g., -23.555,-46.633, 800" 
-    style="color: green; font-family:arial; font-size: 16px;"
+    style="color: green; font-family:arial; font-size: 16px; text-align: center"
     value="41.179, -8.643, 70" size="15"
     onchange="calcular(show)" />
     
     <br><br>
     
     <label for="dia" 
-      style="color: green; font-family:arial; font-size: 16px">
-      <b> Dia:</b></label>
+      style="color: green; font-family:arial; font-size: 20px">
+      em:</label>
     <input type="text" id="dia" size= 10 placeholder="DDDD-MM-AA"
-      style="color: green; font-family:arial; font-size: 16px"
+      style="color: green; font-family:arial; font-size: 16px; text-align: center"
       onchange="calcular(show)">
     
+    <br><br>
+
     <!-- Button to open the map in a new tab -->
     <button id="trigger-button" 
-      style="color:white; background-color: green; margin-left:95px;
+      style="color:white; background-color: green;
       border: 0px; border-radius: 10px; font-size: 15px; padding: 7px">
       <b> Mapa com voos</b> 
     </button>

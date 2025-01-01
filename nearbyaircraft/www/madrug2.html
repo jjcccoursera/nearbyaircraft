@@ -23,7 +23,7 @@
   <table id="Cab" style="width: 100%; font-family: arial">
     <tr style="color: white; background-color: green; border: 3px solid green;
                 font-family:arial; font-size: 20px">
-        <td width="100%" style="padding: 20px">
+        <td width="100%" style="padding: 20px" id="madrug">
             <div style="color:rgb(128, 248, 128); text-align: center">
                 <b> Voos madrugadores </b>
             </div>
@@ -37,20 +37,50 @@
     <br /> as imediações...
     <p></p>
   </div>
-  <div style="margin-left: 20px; text-align: center">
+  <div style="text-align: center">
     <label for="coordinates" style="color: green; font-family:arial; font-size: 20px;">
-    de <span style="font-size: 12px">(lat, long, alt):</span> </label>
-    <input type="text" id="coordinates" placeholder="e.g., -23.555,-46.633, 800" 
+    de <span style="font-size: 12px">(lat, long, alt; especifique ou duplo clique para escolher):</span> </label> <br />
+    <input list="locations" id="coordinates"  
     style="color: green; font-family:arial; font-size: 16px; text-align: center"
-    value="41.179, -8.643, 70" size="15"
+    autocomplete="off" value="41.168047, -8.66074, 60"
     onchange="calcular(show)" />
+    <datalist id="locations">
+            <option value="Câm. Mun. do Porto: 41.157944, -8.629105, 70">
+            <option value="Câm. Mun. de Gaia: 41.133647, -8.611042, 60">
+            <option value="Câm. Mun. de Matosinhos: 41.186549, -8.689858, 80">
+            <option value="Câm. Mun. da Maia: 41.233044, -8.619238, 50">
+            <option value="Câm. Mun. de Gondomar: 41.144550, -8.532824, 40">
+            <option value="Câm. Mun. de Vila do Conde: 41.354810, -8.747206, 55">
+            <option value="Câm. Mun. da Póvoa de Varzim: 41.379658, -8.760439, 45">
+            <option value="Câm. Mun. de Valongo: 41.187858, -8.498251, 65">
+            <option value="Casa da Música: 41.155082, -8.611398, 20">
+            <option value="Ribeira: 41.140607, -8.611071, 15">
+            <option value="Ponte de Leça: 41.194791, -8.687710, 30">
+            <option value="Aeroporto do Porto: 41.235718, -8.678617, 25">
+            <option value="Castelo do Queijo: 41.167610, -8.689909, 10">
+            <option value="Senhor da Pedra: 41.109592, -8.653928, 35">
+            <option value="Estação de Campanhã: 41.149979, -8.583583, 40">
+            <option value="Estação de S. Bento: 41.145321, -8.610129, 35">
+            <option value="Fonte da Moura: 41.168047, -8.66074, 60">
+            <option value="Estádio do Dragão: 41.161735, -8.583293, 55">
+            <option value="Estádio do Bessa: 41.164911, -8.632892, 50">
+            <option value="Estádio do Mar: 41.191630, -8.692160, 45">
+            <option value="Hospital Santo António: 41.151726, -8.619084, 35">
+            <option value="Hospital de S. João: 41.180856, -8.596905, 70">
+            <option value="Hospital de Matosinhos: 41.182588, -8.687340, 25">
+            <option value="Hospital de Gaia: 41.120749, -8.610924, 20">
+            <option value="Liceu Garcia de Orta: 41.157250, -8.655052, 30">
+            <option value="Liceu Rodrigues de Freitas: 41.142783, -8.611147, 40">
+            <option value="Liceu Alexandre Herculano: 41.154888, -8.599647, 45">
+            <option value="Liceu António Nobre: 41.170642, -8.616084, 50">    
+        </datalist>
     
     <br><br>
     
     <label for="dia" 
       style="color: green; font-family:arial; font-size: 20px">
       em:</label>
-    <input type="text" id="dia" size= 10 placeholder="DDDD-MM-AA"
+    <input type="text" id="dia" size= 10 
       style="color: green; font-family:arial; font-size: 16px; text-align: center"
       onchange="calcular(show)">
     
@@ -105,8 +135,12 @@
     
     function calcular(show) {
       const dia = document.getElementById('dia').value;
-      const coordsInput = document.getElementById('coordinates');
-	    const coords = coordsInput.value.split(',').map(coord => coord.trim());
+      const coordsInput = document.getElementById('coordinates').value;
+      const details = coordsInput.split(': ')[1];
+      let coords = coordsInput.split(',').map(coord => coord.trim());
+      if (details) { 
+	      coords = details.split(',').map(coord => coord.trim());
+      }
 
       if (coords.length !== 3) {
         alert('As coordenadas devem estar no formato: latitude,longitude, altitude.');
@@ -219,6 +253,10 @@
             return 0;
         });
         console.log(215, voos);
+        if (voos.length > 0) {
+            document.getElementById('dia').value = voos[0]['timestamp'].value.slice(0,10);
+            console.log(voos[0]['timestamp'].value.slice(0,10));
+        }
         voos.forEach(voo => {
           if (voo['distance'] < 3000) {
             let d = voo['timestamp'].value.replace('T', ' ').slice(0, 19);
@@ -235,8 +273,8 @@
               <td style="color: green">${formattedDate}</td>
               <td style="color: green" align=left>${voo['call_sign']}</td>
               <td style="color: green; font-size: 10px " class="Um">${voo['country'].slice(-11)}  </td>
-              <td style="color: green; text-align: center" class="Dois">${voo['distance'].toLocaleString('en-US', {maximumFractionDigits:0})}</td>
-              <td style="color: green; text-align: center" class="Três">${voo['altitude'].toLocaleString('en-US', {maximumFractionDigits:0})}</td>
+              <td style="color: green; text-align: right" class="Dois">${voo['distance'].toLocaleString('en-US', {maximumFractionDigits:0})}</td>
+              <td style="color: green; text-align: right" class="Três">${voo['altitude'].toLocaleString('en-US', {maximumFractionDigits:0})}</td>
               <td style="color: green" class="Quatro">${voo['climbing_rate']}</td>
               <td style="color: green; text-align: center" class="Cinco">${voo['velocidade'].toLocaleString('en-US', {maximumFractionDigits:0})}</td>
               <td style="color: green; text-align: center" class="Seis">${voo['latitude'].toFixed(3)}</td>
@@ -306,8 +344,10 @@
           latitudeRef: 41.179,
           longitudeRef: -8.643,
           altitudeRef: 70
-        };
+    };
+    console.log(dia);
     document.getElementById('dia').value = dia;
+    document.getElementById('coordinates').style.width =  document.getElementById('madrug').style.width 
     voos = madrug(show, base);
     console.log(voos);
 

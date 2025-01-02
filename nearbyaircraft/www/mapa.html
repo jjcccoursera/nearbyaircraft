@@ -44,6 +44,14 @@
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(map);
 
+      // Marcador para referência
+      const ref = L.circleMarker([latitudeRef, longitudeRef], {
+            radius: 15,
+            color: 'red',
+            fillColor: 'yellow',
+            fillOpacity: 0.8
+          }).addTo(map);
+          
       // Process and display flight paths
       const colors = ['red', 'blue', 'green', 'orange', 'purple', 'yellow', 'pink', 'black'];
       let colorIndex = 0;
@@ -108,9 +116,11 @@
     
     // Extract the 'dia' parameter from the URL 
     const dia = urlParams.get('dia'); 
+    const latitudeRef = urlParams.get('lat');
+    const longitudeRef = urlParams.get('long');
     
     // Log the 'dia' parameter to the console 
-    console.log(111, 'Dia:', dia);
+    console.log(111, 'Dia:', dia), 'Ref: ', latitudeRef, longitudeRef;
     
     // Initialize map after page load
     initializeMap(dia);

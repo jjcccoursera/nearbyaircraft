@@ -42,7 +42,7 @@
     de <span style="font-size: 12px">(lat, long, alt; especifique ou duplo clique para escolher):</span> </label> <br />
     <input list="locations" id="coordinates"  
     style="color: green; font-family:arial; font-size: 16px; text-align: center"
-    autocomplete="off" value="41.168047, -8.66074, 60"
+    autocomplete="off" value="41.163484, -8.669470, 30"
     onchange="calcular(show)" />
     <datalist id="locations">
       <option value="Câm. Mun. do Porto: 41.15, -8.61024, 70">
@@ -229,7 +229,7 @@
       }
     }
 
-    function mostra(voos,show, coluna) {
+    function mostra(voos, show, coluna) {
       console.log(show);
       const tableBody = document.getElementById('aircraftData');
       while (tableBody.hasChildNodes()) {
@@ -294,7 +294,7 @@
 
 
     async function madrug(show, dados) {
-      console.log('in madrug');
+      console.log('in madrug', dados);
       
       	try {
           // Send POST request
@@ -334,23 +334,26 @@
 
     window.onload = function() { 
       const inputField = document.getElementById('dia'); 
-      inputField.value = dia; 
+      inputField.value = queryDate; // estava dia
     }
     
     const show = ['Um', 'Dois', 'Três', 'Quatro', 'Cinco', 'Seis', 'Sete'];
+
     const today = new Date();
-    const year = today.getFullYear(); 
-    const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-based, so add 1 
-    const day = String(today.getDate()-1).padStart(2, '0');
-    const dia = `${year}-${month}-${day}`;
+    // Determine if we should query yesterday's flights
+    const queryTime = new Date().setHours(7, 15, 0, 0); // 8:15 AM in milliseconds
+    queryDate = today.toISOString().slice(0, 10);
+    if (today.getTime() < queryTime) {
+      const yesterday = new Date(today.getTime() - (1000 * 60 * 60 * 24));
+      queryDate = yesterday.toISOString().slice(0, 10); // YYYY-MM-DD format
+    }
     let base = {
-          dia: dia,
-          latitudeRef: 41.179,
-          longitudeRef: -8.643,
-          altitudeRef: 70
+          dia: queryDate, // estava dia
+          latitudeRef: 41.163484,
+          longitudeRef: -8.669470,
+          altitudeRef: 30
     };
-    console.log(dia);
-    document.getElementById('dia').value = dia;
+    document.getElementById('dia').value = queryDate; // estava dia
     document.getElementById('coordinates').style.width =  document.getElementById('madrug').style.width 
     voos = madrug(show, base);
     console.log(voos);

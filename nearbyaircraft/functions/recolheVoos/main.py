@@ -1,9 +1,14 @@
 import requests 
 from google.cloud import bigquery
 from datetime import datetime 
-from dateutil.parser import parse 
+from dateutil.parser import parse
+import pytz
+
+# https://chat.deepseek.com/a/chat/s/ea23de2b-640c-44d1-beb3-8a40adccb157
+# ajuste DST
 
 def recolheVoos(data, context):
+# def recolheVoos():
     lat = '41.1653349'
     long = '-8.6758848'
     alt = '0'
@@ -20,18 +25,22 @@ def recolheVoos(data, context):
         if 'aircraft' in response.json():
             aircraft_list = response.json()['aircraft']
             timestamp = response.json()['timestamp']
+            print('OpenSky timestamp ', timestamp)
             # Parse the timestamp string using datetime.strptime
             dt_object = parse(timestamp, fuzzy=True)
+            portugal_tz = pytz.timezone('Europe/Lisbon')
+            dt_object = dt_object.astimezone(portugal_tz)  # Convert to local time
             # Format the datetime object to the desired format
             formatted_timestamp = dt_object.strftime('%Y-%m-%d %H:%M:%S')
-            print(formatted_timestamp, aircraft_list)
+            # print(f"UTC Time: {dt_object.strftime('%Y-%m-%d %H:%M:%S')}")  # For debugging
+            print(f"Portugal Time: {formatted_timestamp} | Aircraft: {aircraft_list}")
             processa_lista(formatted_timestamp, aircraft_list)
         else:
             print(response.json())
     else:
         print(f"Request failed with status code: {response.status_code}")
     
-    current_date = datetime.utcnow().strftime('%Y-%m-%d')
+    # current_date = datetime.utcnow().strftime('%Y-%m-%d')
 
     
 def processa_lista(timestamp, aircraft_list):
@@ -79,3 +88,4 @@ def processa_lista(timestamp, aircraft_list):
             for error in errors:
                 print(f"Error: {error}")
         
+# recolheVoos()

@@ -12,10 +12,10 @@ https://chatgpt.com/c/676844bc-d080-8003-b7e2-3632f28b002b
 2. Criar as funções
 
     cd nearbyaircraft/functions/recolheVoos
-    gcloud functions deploy recolheVoos 
-        --runtime python39
-        --trigger-topic recolheVoos 
-        --project nearbyaircraft 
+    gcloud functions deploy recolheVoos \
+        --runtime python39 \
+        --trigger-topic recolheVoos \
+        --project nearbyaircraft \
         --entry-point recolheVoos
 
     cd nearbyaircraft/functions/distMin

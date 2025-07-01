@@ -1,0 +1,7 @@
+Flask==3.1.1
+requests==2.31.0
+gunicorn==20.1.0         # WSGI production server
+python-dotenv==1.0.1     # Load env vars from .env files (optional but handy)
+flask-cors==4.0.0        # If you plan to serve JS frontends from elsewhere
+flask-limiter==3.5.0     # Basic rate limiting middleware (anti-abuse)
+polars==0.20.3           # Faster alternative to pandas

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    @media (min-width: 768px) {
+      body {
+        max-width: 500px;
+        margin: 0 auto;
+      }
+    }
+    body {
+        background-color: rgba(161, 196, 133, 0.2)
+    }
+    .hidden {
+        display: none;
+    }
+  </style>
+  <title>Aircraft nearby</title>
+</head>
+<body>
+  <table id="Cab" style="width: 100%; font-family: arial">
+    <tr style="color: white; background-color: green; border: 3px solid green;
+                font-family:arial; font-size: 20px">
+        <td width="100%" style="padding: 20px">
+            <div style="color:rgb(128, 248, 128); text-align: center">
+                <b> Voos madrugadores de hoje </b>
+            </div>
+        </td>
+    </tr>
+  </table>
+  <p>  </p>
+  <div style="color: green; font-family:arial; font-size: 20px; text-align: center">
+    <p></p><p></p>
+    <br />Sobrevoando imediações <br />do Garcia / Parque Cidade (entrada Sul)<br />
+    <br /><p></p><p></p>
+  </div>
+  <div>
+    <!-- Button to open the map in a new tab -->
+    <button id="trigger-button" 
+      style="color:white; background-color: green;
+      border: 0px; border-radius: 10px; font-size: 15px; padding: 7px">
+      <b> Mapa com voos</b> 
+    </button>
+    <label for="dia" 
+      style="color: green; margin-left:50px; font-family:arial; font-size: 16px">
+      <b> Outro dia:</b></label>
+    <input type="text" id="dia" size= 10 placeholder="DDDD-MM-AA"
+      style="color: green; font-family:arial; font-size: 16px"
+      onchange="outroDia(show)">
+  </div>  
+  <div style="text-align: right">
+    <img src="icons/back.png" alt="back" width="24" onclick="back()">
+    <img src="icons/forward.png" alt="forw" width="24" onclick="forward()">
+  </div>
+  
+  <table style="margin-left: auto; margin-right: auto">
+    <thead>
+      <tr id='tit' style="color: green; visibility: hidden"">
+        <th><u> Hora       </u></th>
+        <th align=left><u> Call sign       </u></th>
+        <th class="Um"><u> Pa&#237s       </u></th>
+        <th class="Dois"><u> Dist&#226ncia     </u></th>
+        <th class="Três"><u> Altitude    </u></th>
+        <th class="Quatro"><u> m/s  </u></th>
+        <th class="Cinco"><u> Velocidade  </u></th>
+        <th class="Seis"><u> Latit  </u></th>
+        <th class="Sete"><u> Longit  </u></th>  
+      </tr>
+    </thead>
+    <tbody id="aircraftData" style="text-align:right;"></tbody>  
+  </table>
+
+  <div style="text-align: right">
+    <img src="icons/back.png" alt="back" width="24" onclick="back()">
+    <img src="icons/forward.png" alt="forw" width="24" onclick="forward()">
+  </div>
+  <div style="color: green; font-family:arial; font-size: 8px; text-align: right">
+    <a target="_blank" href="https://icons8.com/icon/dFwKnb0cfxNs/next-page"></a> Icons by <a target="_blank" href="https://icons8.com">Icons8</a>
+  </div>
+
+  <script>
+
+    document.getElementById('trigger-button').addEventListener('click', () => {
+      // Open the /flightPaths page in a new tab
+      window.open('/mapa?dia='+document.getElementById('dia').value
+                  + '&lat=41.1653349&long=8.6758848', '_blank');
+    });
+    
+    function outroDia(show) {
+      const dia = document.getElementById('dia').value;
+      madrug(show,'?dia='+dia);
+    }
+
+
+    function back() {
+      if (coluna == 0) {return};
+      coluna -=1;
+      if (coluna == 3) {
+        coluna -=1;
+      }
+      showElements(show, coluna);
+      return
+    }
+
+    function forward() {
+      if (coluna > 3) {return};
+      coluna +=1;
+      if (coluna == 3) {
+        coluna +=1;
+      }
+      showElements(show, coluna);
+      return
+    }
+
+    function displayClassElements(show, index) {
+      console.log(show, index);
+      const elements = document.querySelectorAll(`.${show[index]}`);
+      console.log(elements);
+      elements.forEach((el) => {
+          el.classList.remove('hidden');
+      });
+      console.log(elements);
+    }
+
+    function showElements(show, n) {
+      console.log(show, n);
+      // Hide all elements first
+      for (let i = 0; i < show.length; i++) {
+          const elements = document.querySelectorAll(`.${show[i]}`);
+          elements.forEach((el) => {
+              el.classList.add('hidden');
+          });
+      }
+
+      // Show elements for show[n], show[n+1], and show[n+2]
+      if (n < show.length) {
+          displayClassElements(show, n);
+      }
+      if (n + 1 < show.length) {
+          displayClassElements(show, n + 1);
+      }
+      if (n + 2 < show.length) {
+          displayClassElements(show, n + 2);
+      }
+    }
+
+    function mostra(voos,show, coluna) {
+      console.log(show);
+      const tableBody = document.getElementById('aircraftData');
+      while (tableBody.hasChildNodes()) {
+        tableBody.removeChild(tableBody.lastChild);
+      }
+
+      const row = document.createElement('tr');
+      if (voos == null) {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>Não houve voos madrugadores :)</td>
+        `;
+        tableBody.appendChild(row);
+      } else {
+        voos.forEach(voo => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td style="color: green">${voo['data']}</td>
+            <td style="color: green" align=left>${voo['call_sign']}</td>
+            <td style="color: green; font-size: 10px " class="Um">${voo['country'].slice(-11)}  </td>
+            <td style="color: green; text-align: center" class="Dois">${voo['distance'].toLocaleString('en-US', {maximumFractionDigits:0})}</td>
+            <td style="color: green; text-align: center" class="Três">${voo['altitude'].toLocaleString('en-US', {maximumFractionDigits:0})}</td>
+            <td style="color: green" class="Quatro">${voo['climbing_rate']}</td>
+            <td style="color: green; text-align: center" class="Cinco">${voo['velocidade']}</td>
+            <td style="color: green; text-align: center" class="Seis">${voo['latitude'].toFixed(3)}</td>
+            <td style="color: green; text-align: center" class="Sete">${voo['longitude'].toFixed(3)}</td>
+          `;
+          tableBody.appendChild(row);
+        });
+        document.getElementById('tit').style.visibility = 'visible';
+        showElements(show, 0);
+      }
+    }
+
+
+    async function madrug(show, dia) {
+      console.log('in madrug');
+      
+      try {
+        console.log('Starting to fetch flight data...');
+        const response = await fetch('https://us-central1-nearbyaircraft.cloudfunctions.net/madrug'+dia, {
+          method: 'GET', // Explicitly use GET method
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          mode: 'cors', // Explicitly set CORS mode
+        });
+        console.log('Fetch request sent');
+
+        // Log response headers to verify CORS headers
+        console.log('Response Headers:', response.headers);
+
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+
+        const voos = await response.json();  
+        console.log('Received response:', voos);
+        
+        coluna = 1;
+        mostra(voos, show, coluna);
+        // return voos;
+
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    }
+
+    
+    if (window.location.protocol !== "https:") { 
+      alert("Pf mude para https!");
+    }
+
+    window.onload = function() { 
+      const inputField = document.getElementById('dia'); 
+      inputField.value = inputField.defaultValue; 
+    }
+    
+    const show = ['Um', 'Dois', 'Três', 'Quatro', 'Cinco', 'Seis', 'Sete'];
+    voos = madrug(show,'');
+    // print(voos);
+    
+
+  </script>
+</body>
+</html>

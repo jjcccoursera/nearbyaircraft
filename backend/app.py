@@ -5,6 +5,7 @@ import time
 from datetime import datetime
 import os
 from zoneinfo import ZoneInfo
+import sqlite3
         
 
 app = Flask(__name__, static_folder='../www', static_url_path='/nearbyaircraft')
@@ -75,7 +76,7 @@ def flight_paths():
                 altitude,
                 climbing_rate,
                 velocidade
-            FROM flightPaths
+            FROM brutos
             WHERE DATE(timestamp) = ?
             ORDER BY call_sign, timestamp
         """
@@ -97,10 +98,6 @@ def flight_paths():
     except Exception as e:
         print('Error fetching flight data:', e)
         return jsonify({'error': 'Error fetching flight data'}), 500
-
-    except Exception as e:
-        print('Error fetching flight paths:', e)
-        return jsonify({'error': 'Error fetching flight paths'}), 500
 
 @app.route('/api', methods=['GET'])
 def aircraft_api():

@@ -21,57 +21,6 @@ CACHE_DURATION = 30  # seconds
 
 
 # -------- API Endpoint: Aircraft Data --------
-@app.route("/api/copilot")
-def get_aircraft():
-    try:
-        lat = float(request.args.get("lat"))
-        lon = float(request.args.get("long"))
-        alt = float(request.args.get("alt"))
-    except (TypeError, ValueError):
-        return jsonify({"error": "Invalid or missing lat/long/alt parameters"}), 400
-
-    now = time.time()
-    if cache["data"] and (now - cache["timestamp"] < CACHE_DURATION):
-        return jsonify(cache["data"])
-
-    lamin, lamax = lat - 0.5, lat + 0.5
-    lomin, lomax = lon - 0.5, lon + 0.5
-    opensky_url = f"https://opensky-network.org/api/states/all?lamin={lamin}&lomin={lomin}&lamax={lamax}&lomax={lomax}"
-
-    try:
-        response = requests.get(opensky_url, timeout=10)
-        response.raise_for_status()
-        data = response.json()
-    except Exception as e:
-        return jsonify({"error": f"Error fetching data from OpenSky: {e}"}), 502
-
-    if not data.get("states"):
-        return jsonify({"message": "No aircraft nearby"})
-
-    results = []
-    for state in data["states"]:
-        distance = calculate_3d_distance(lat, lon, alt, state[6], state[5], state[13] or 0)
-        altit = state[13] if state[13] is not None else "n.a."
-        rate = f"{state[11]:.1f}" if state[11] is not None else "n.a."
-        velocity = f"{state[9] * 3.6:.1f}" if state[9] else "n.a."
-        tipo = state[17] if len(state) > 17 else "n.a."
-        results.append([
-            state[1], state[2], f"{distance:.1f}", altit, rate,
-            state[6], state[5], velocity, tipo
-        ])
-
-    response_object = {
-        "timestamp": datetime.utcfromtimestamp(data["time"]).isoformat(),
-        "latlongalt": [lat, lon, alt],
-        "header": ["Callsign", "Country", "Distance", "Altitude", "Climbing", "Latitude", "Longitude", "Velocidade", "Tipo"],
-        "aircraft": results,
-        "urlsource": opensky_url,
-        "source": "Adapted from OpenSky Network ADS-B data"
-    }
-
-    cache["timestamp"] = time.time()
-    cache["data"] = response_object
-    return jsonify(response_object)
 
 @app.route('/api/madrug2', methods=['POST', 'OPTIONS'])
 def madrug2_api():
@@ -90,8 +39,68 @@ def madrug2_api():
 
 @app.route('/flightPaths')
 def flight_paths():
-    # [Your flight path fetching logic]
-    ...
+    try:
+        # Determine the default query date (today or yesterday based on time)
+        now = datetime.now()
+        query_time = now.replace(hour=8, minute=15, second=0, microsecond=0)
+        query_date = now.date()
+
+        if now < query_time:
+            query_date = query_date - timedelta(days=1)
+
+        # Check if 'dia' query parameter is provided and valid
+        dia_param = request.args.get('dia')
+        if dia_param:
+            try:
+                parsed_date = datetime.strptime(dia_param, '%Y-%m-%d').date()
+                if dia_param == parsed_date.isoformat():
+                    query_date = parsed_date
+            except ValueError:
+                pass  # Ignore invalid date format and use default
+
+        print("Query date:", query_date)
+
+        # Connect to SQLite and fetch data
+        conn = sqlite3.connect(DATABASE_PATH)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+
+        query = """
+            SELECT
+                call_sign,
+                country,
+                timestamp,
+                latitude,
+                longitude,
+                altitude,
+                climbing_rate,
+                velocidade
+            FROM flightPaths
+            WHERE DATE(timestamp) = ?
+            ORDER BY call_sign, timestamp
+        """
+        cursor.execute(query, (query_date.isoformat(),))
+        rows = cursor.fetchall()
+        conn.close()
+
+        # Group rows by call_sign
+        flight_paths = {}
+        for row in rows:
+            record = dict(row)
+            call_sign = record['call_sign']
+            if call_sign not in flight_paths:
+                flight_paths[call_sign] = []
+            flight_paths[call_sign].append(record)
+
+        return jsonify(flight_paths)
+
+    except Exception as e:
+        print('Error fetching flight data:', e)
+        return jsonify({'error': 'Error fetching flight data'}), 500
+
+    except Exception as e:
+        print('Error fetching flight paths:', e)
+        return jsonify({'error': 'Error fetching flight paths'}), 500
 
 @app.route('/api', methods=['GET'])
 def aircraft_api():

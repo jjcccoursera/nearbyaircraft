@@ -246,11 +246,11 @@
       } else {
         // Ordena os voos por data
          voos.forEach(voo => {
-            voo['timestamp'].value = voo['timestamp'].value.replace('T', ' ').slice(0, 19);
+            voo['timestamp'] = voo['timestamp'].replace('T', ' ').slice(0, 19);
          });
          voos.sort((a, b) => {
-            const timeA = a.timestamp.value;
-            const timeB = b.timestamp.value;
+            const timeA = a.timestamp;
+            const timeB = b.timestamp;
 
             if (timeA < timeB) return -1;
             if (timeA > timeB) return 1;
@@ -258,12 +258,13 @@
         });
         console.log(215, voos);
         if (voos.length > 0) {
-            document.getElementById('dia').value = voos[0]['timestamp'].value.slice(0,10);
-            console.log(voos[0]['timestamp'].value.slice(0,10));
+            document.getElementById('dia').value = voos[0]['timestamp'].slice(0,10);
+            console.log(voos[0]['timestamp'].slice(0,10));
         }
         voos.forEach(voo => {
+          console.log(voo['timestamp']);
           if (voo['distance'] < 3000) {
-            let d = voo['timestamp'].value.replace('T', ' ').slice(0, 19);
+            let d = voo['timestamp'].replace('T', ' ').slice(0, 19);
             // Split the date and time 
             let [datePart, timePart] = d.split(' '); 
             // Split the date part to rearrange 
@@ -298,7 +299,7 @@
       
       	try {
           // Send POST request
-          const response = await fetch('https://europe-southwest1-nearbyaircraft.cloudfunctions.net/madrug2', {
+          const response = await fetch('/nearbyaircraft/api/madrug2', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json'
@@ -317,6 +318,9 @@
 
           const voos = await response.json();
           console.log('Response from cloud function:', voos);
+          voos.forEach((voo, index) => {
+            console.log(`voo[${index}].timestamp:`, voo['timestamp']);
+          });
           
           coluna = 1;
           mostra(voos, show, coluna);

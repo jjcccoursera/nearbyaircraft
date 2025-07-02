@@ -333,46 +333,93 @@ def safe_avg(a, b):
     return (a + b) / 2
 
 def find_closest_point(records, lat_ref, lon_ref, alt_ref):
-    """Find closest point with interpolation (using your distmin.py logic)"""
     if not records:
         return None
-        
-    # Initialize with first record
+
     closest = records[0]
     min_dist = calculate_3d_distance(
         closest['latitude'], closest['longitude'], closest['altitude'],
         lat_ref, lon_ref, alt_ref
     )
-    
-    # Check all records and interpolate between points
-    for i in range(len(records)-1):
-        current = records[i]
-        next_rec = records[i+1]
+    closest['distance'] = min_dist
 
-        # Check midpoint
-        lat_avg = (current['latitude'] + next_rec['latitude']) / 2
-        lon_avg = (current['longitude'] + next_rec['longitude']) / 2
-        alt_avg = (current['altitude'] + next_rec['altitude']) / 2
-        
+    # Check midpoint between first and second record
+    if len(records) > 1:
+        lat_avg = (records[0]['latitude'] + records[1]['latitude']) / 2
+        lon_avg = (records[0]['longitude'] + records[1]['longitude']) / 2
+        alt_avg = (records[0]['altitude'] + records[1]['altitude']) / 2
         dist = calculate_3d_distance(lat_avg, lon_avg, alt_avg, lat_ref, lon_ref, alt_ref)
-        
+        if dist < min_dist:
+            min_dist = dist
+            closest = {
+                'call_sign': records[0]['call_sign'],
+                'distance': dist,
+                'timestamp': interpolate_sql_timestamps(records[0]['timestamp'], records[1]['timestamp']),
+                'latitude': lat_avg,
+                'longitude': lon_avg,
+                'altitude': alt_avg,
+                'velocidade': safe_avg(records[0]['velocidade'], records[1]['velocidade']),
+                'tipo': records[0]['tipo'],
+                'country': records[0]['country'],
+                'climbing_rate': safe_avg(records[0]['climbing_rate'], records[1]['climbing_rate'])
+            }
+
+    for i in range(1, len(records)):
+        current = records[i]
+        dist = calculate_3d_distance(
+            current['latitude'], current['longitude'], current['altitude'],
+            lat_ref, lon_ref, alt_ref
+        )
+        if dist < min_dist:
+            min_dist = dist
+            closest = current.copy()
+            closest['distance'] = dist
+
+        # Interpolate with previous
+        prev = records[i - 1]
+        lat_avg = (current['latitude'] + prev['latitude']) / 2
+        lon_avg = (current['longitude'] + prev['longitude']) / 2
+        alt_avg = (current['altitude'] + prev['altitude']) / 2
+        dist = calculate_3d_distance(lat_avg, lon_avg, alt_avg, lat_ref, lon_ref, alt_ref)
         if dist < min_dist:
             min_dist = dist
             closest = {
                 'call_sign': current['call_sign'],
                 'distance': dist,
-                'timestamp': interpolate_sql_timestamps(current['timestamp'], next_rec['timestamp']),
+                'timestamp': interpolate_sql_timestamps(prev['timestamp'], current['timestamp']),
                 'latitude': lat_avg,
                 'longitude': lon_avg,
                 'altitude': alt_avg,
-                'velocidade': safe_avg(current['velocidade'], next_rec['velocidade']),
-                'tipo': current['tipo'],  
+                'velocidade': safe_avg(prev['velocidade'], current['velocidade']),
+                'tipo': current['tipo'],
                 'country': current['country'],
-                'climbing_rate': safe_avg(current['climbing_rate'], next_rec['climbing_rate'])
+                'climbing_rate': safe_avg(prev['climbing_rate'], current['climbing_rate'])
             }
-    
-    closest['distance'] = round(min_dist, 1)
+
+        # Interpolate with next (if exists)
+        if i + 1 < len(records):
+            next_rec = records[i + 1]
+            lat_avg = (current['latitude'] + next_rec['latitude']) / 2
+            lon_avg = (current['longitude'] + next_rec['longitude']) / 2
+            alt_avg = (current['altitude'] + next_rec['altitude']) / 2
+            dist = calculate_3d_distance(lat_avg, lon_avg, alt_avg, lat_ref, lon_ref, alt_ref)
+            if dist < min_dist:
+                min_dist = dist
+                closest = {
+                    'call_sign': current['call_sign'],
+                    'distance': dist,
+                    'timestamp': interpolate_sql_timestamps(current['timestamp'], next_rec['timestamp']),
+                    'latitude': lat_avg,
+                    'longitude': lon_avg,
+                    'altitude': alt_avg,
+                    'velocidade': safe_avg(current['velocidade'], next_rec['velocidade']),
+                    'tipo': current['tipo'],
+                    'country': current['country'],
+                    'climbing_rate': safe_avg(current['climbing_rate'], next_rec['climbing_rate'])
+                }
+
     return closest
+
     
 # -------- App Runner --------
 if __name__ == "__main__":

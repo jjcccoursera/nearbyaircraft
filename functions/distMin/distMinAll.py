@@ -4,7 +4,32 @@ from datetime import datetime, timedelta
 import pandas as pd
 import math
 
+"""
+Script para processar dados de voos da tabela 'brutos' e calcular distâncias mínimas
+
+Funcionalidades principais:
+1. Identifica datas presentes na tabela 'brutos' que ainda não foram processadas na tabela 'distancias'
+2. Para cada voo, encontra os 2 pontos mais próximos de uma referência (Porto: 41.1653349, -8.67588)
+3. Calcula distância 3D (incluindo altitude) entre a referência e cada ponto do voo
+4. Interpola posições entre os 2 pontos mais próximos quando possível
+5. Armazena os resultados na tabela 'distancias' com informações consolidadas
+
+Métodos principais:
+- calculate_3d_distance: Calcula distância 3D entre dois pontos geográficos
+- interpolar: Processa os dados brutos e gera pontos interpolados quando vantajoso
+- get_missing_dates: Identifica datas não processadas
+- process_date: Processa todos os voos de uma data específica
+- distMin: Função principal que orquestra todo o processamento
+
+"""
+
 def calculate_3d_distance(lat1, lon1, alt1, lat2, lon2, alt2):
+    """
+    Calcula a distância 3D entre dois pontos geográficos considerando altitude
+    Usa fórmula de Haversine para cálculo da distância superficial e
+    adiciona componente vertical (altitude) para distância final
+    """
+    
     R = 6371e3  # Earth's radius in meters
     phi1 = lat1 * math.pi / 180
     phi2 = lat2 * math.pi / 180
@@ -76,7 +101,14 @@ def interpolar(results):
     return rows_to_insert
 
 def get_missing_dates(conn):
-    """Get dates present in brutos but not in distancias"""
+    """
+    Identifica datas presentes na tabela 'brutos' que ainda não foram
+    processadas na tabela 'distancias'
+    
+    Retorna:
+        Lista de strings no formato 'YYYY-MM-DD' com as datas faltantes
+    """
+    
     cur = conn.cursor()
     
     # First try to get dates using SQLite's DATE function

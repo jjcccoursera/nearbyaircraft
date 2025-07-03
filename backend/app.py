@@ -83,7 +83,7 @@ def madrug2_api():
                 records, 
                 float(data['latitudeRef']), 
                 float(data['longitudeRef']), 
-                float(data['altitudeRef'])
+                float(data['altitudeRef']), callsign_filter="RYR7052"
             )
             if closest and closest.get("timestamp") is not None:
                 resultados.append(closest)
@@ -332,92 +332,96 @@ def safe_avg(a, b):
         return a
     return (a + b) / 2
 
-def find_closest_point(records, lat_ref, lon_ref, alt_ref):
+def find_closest_point(records, lat_ref, lon_ref, alt_ref, callsign_filter=None):
+    import copy
+    import logging
+    import math
+
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s')
+    log = logging.getLogger()
+
     if not records:
         return None
+    
+    dist_min = float('inf')
+    closest = None
 
-    closest = records[0]
-    min_dist = calculate_3d_distance(
-        closest['latitude'], closest['longitude'], closest['altitude'],
-        lat_ref, lon_ref, alt_ref
-    )
-    closest['distance'] = min_dist
+    for i in range(len(records)):
+        rec = records[i]
+        if callsign_filter and rec.get('call_sign') != callsign_filter:
+            continue  # Skip logging for other flights
 
-    # Check midpoint between first and second record
-    if len(records) > 1:
-        lat_avg = (records[0]['latitude'] + records[1]['latitude']) / 2
-        lon_avg = (records[0]['longitude'] + records[1]['longitude']) / 2
-        alt_avg = (records[0]['altitude'] + records[1]['altitude']) / 2
-        dist = calculate_3d_distance(lat_avg, lon_avg, alt_avg, lat_ref, lon_ref, alt_ref)
-        if dist < min_dist:
-            min_dist = dist
-            closest = {
-                'call_sign': records[0]['call_sign'],
-                'distance': dist,
-                'timestamp': interpolate_sql_timestamps(records[0]['timestamp'], records[1]['timestamp']),
-                'latitude': lat_avg,
-                'longitude': lon_avg,
-                'altitude': alt_avg,
-                'velocidade': safe_avg(records[0]['velocidade'], records[1]['velocidade']),
-                'tipo': records[0]['tipo'],
-                'country': records[0]['country'],
-                'climbing_rate': safe_avg(records[0]['climbing_rate'], records[1]['climbing_rate'])
-            }
-
-    for i in range(1, len(records)):
-        current = records[i]
+        # 1. Check current record
         dist = calculate_3d_distance(
-            current['latitude'], current['longitude'], current['altitude'],
+            rec['latitude'], rec['longitude'], rec['altitude'],
             lat_ref, lon_ref, alt_ref
         )
-        if dist < min_dist:
-            min_dist = dist
-            closest = current.copy()
+        log.debug(f"[CHECK] Record[{i}] dist={dist:.2f} ts={rec['timestamp']}")
+
+        if dist < dist_min:
+            dist_min = dist
+            closest = copy.deepcopy(rec)
             closest['distance'] = dist
+            log.debug(f"[UPDATE] Closest set to record[{i}] @ {rec['timestamp']} | dist={dist:.2f}")
 
-        # Interpolate with previous
-        prev = records[i - 1]
-        lat_avg = (current['latitude'] + prev['latitude']) / 2
-        lon_avg = (current['longitude'] + prev['longitude']) / 2
-        alt_avg = (current['altitude'] + prev['altitude']) / 2
-        dist = calculate_3d_distance(lat_avg, lon_avg, alt_avg, lat_ref, lon_ref, alt_ref)
-        if dist < min_dist:
-            min_dist = dist
-            closest = {
-                'call_sign': current['call_sign'],
-                'distance': dist,
-                'timestamp': interpolate_sql_timestamps(prev['timestamp'], current['timestamp']),
-                'latitude': lat_avg,
-                'longitude': lon_avg,
-                'altitude': alt_avg,
-                'velocidade': safe_avg(prev['velocidade'], current['velocidade']),
-                'tipo': current['tipo'],
-                'country': current['country'],
-                'climbing_rate': safe_avg(prev['climbing_rate'], current['climbing_rate'])
-            }
+            # 2. Check midpoint with previous
+            if i > 0:
+                prev = records[i - 1]
+                rec = records[i]
+                log.debug(f"[DEBUG] Record[{i - 1}] = lat={records[i - 1]['latitude']}, lon={records[i - 1]['longitude']}, alt={records[i - 1]['altitude']}")
+                log.debug(f"[DEBUG] Record[{i}]     = lat={records[i]['latitude']}, lon={records[i]['longitude']}, alt={records[i]['altitude']}")
+                lat_avg = (rec['latitude'] + prev['latitude']) / 2
+                lon_avg = (rec['longitude'] + prev['longitude']) / 2
+                alt_avg = (rec['altitude'] + prev['altitude']) / 2
+                log.debug(f"[DEBUG] Midpoint({i-1},{i}) coords: lat={lat_avg}, lon={lon_avg}, alt={alt_avg}")
+                log.debug(f"[DEBUG] Ref coords: lat={lat_ref}, lon={lon_ref}, alt={alt_ref}")
+                dist_prev = calculate_3d_distance(lat_avg, lon_avg, alt_avg, lat_ref, lon_ref, alt_ref)
+                log.debug(f"[CHECK] Midpoint({i-1},{i}) dist={dist_prev:.2f}")
+                if dist_prev < dist_min:
+                    dist_min = dist_prev
+                    closest = {
+                        'call_sign': rec['call_sign'],
+                        'distance': dist_prev,
+                        'timestamp': interpolate_sql_timestamps(prev['timestamp'], rec['timestamp']),
+                        'latitude': lat_avg,
+                        'longitude': lon_avg,
+                        'altitude': alt_avg,
+                        'velocidade': safe_avg(prev['velocidade'], rec['velocidade']),
+                        'tipo': rec['tipo'],
+                        'country': rec['country'],
+                        'climbing_rate': safe_avg(prev['climbing_rate'], rec['climbing_rate'])
+                    }
+                    log.debug(f"[UPDATE] Closest set to midpoint({i-1},{i})")
 
-        # Interpolate with next (if exists)
-        if i + 1 < len(records):
-            next_rec = records[i + 1]
-            lat_avg = (current['latitude'] + next_rec['latitude']) / 2
-            lon_avg = (current['longitude'] + next_rec['longitude']) / 2
-            alt_avg = (current['altitude'] + next_rec['altitude']) / 2
-            dist = calculate_3d_distance(lat_avg, lon_avg, alt_avg, lat_ref, lon_ref, alt_ref)
-            if dist < min_dist:
-                min_dist = dist
-                closest = {
-                    'call_sign': current['call_sign'],
-                    'distance': dist,
-                    'timestamp': interpolate_sql_timestamps(current['timestamp'], next_rec['timestamp']),
-                    'latitude': lat_avg,
-                    'longitude': lon_avg,
-                    'altitude': alt_avg,
-                    'velocidade': safe_avg(current['velocidade'], next_rec['velocidade']),
-                    'tipo': current['tipo'],
-                    'country': current['country'],
-                    'climbing_rate': safe_avg(current['climbing_rate'], next_rec['climbing_rate'])
-                }
+            # 3. Check midpoint with next
+            if i + 1 < len(records):
+                next_rec = records[i + 1]
+                lat_avg = (rec['latitude'] + next_rec['latitude']) / 2
+                lon_avg = (rec['longitude'] + next_rec['longitude']) / 2
+                alt_avg = (rec['altitude'] + next_rec['altitude']) / 2
+                log.debug(f"[DEBUG] Midpoint({i},{i+1}) coords: lat={lat_avg}, lon={lon_avg}, alt={alt_avg}")
+                dist_next = calculate_3d_distance(lat_avg, lon_avg, alt_avg, lat_ref, lon_ref, alt_ref)
+                log.debug(f"[CHECK] Midpoint({i},{i+1}) dist={dist_next:.2f}")
+                if dist_next < dist_min:
+                    dist_min = dist_next
+                    closest = {
+                        'call_sign': rec['call_sign'],
+                        'distance': dist_next,
+                        'timestamp': interpolate_sql_timestamps(rec['timestamp'], next_rec['timestamp']),
+                        'latitude': lat_avg,
+                        'longitude': lon_avg,
+                        'altitude': alt_avg,
+                        'velocidade': safe_avg(rec['velocidade'], next_rec['velocidade']),
+                        'tipo': rec['tipo'],
+                        'country': rec['country'],
+                        'climbing_rate': safe_avg(rec['climbing_rate'], next_rec['climbing_rate'])
+                    }
+                    log.debug(f"[UPDATE] Closest set to midpoint({i},{i+1})")
 
+    if closest:
+        log.debug(f"[FINAL] Closest point for {closest['call_sign']}: {closest['timestamp']} | dist={closest['distance']:.2f}")
+    else:
+        log.debug("[FINAL] No closest point found.")
     return closest
 
     

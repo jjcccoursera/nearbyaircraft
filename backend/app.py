@@ -11,9 +11,6 @@ from flask.logging import default_handler
 from logging.config import dictConfig
 import sys
 
-# logging.basicConfig(level=logging.DEBUG)
-# logger = logging.getLogger(__name__)
-# logger.debug("This will show up in logs")
 
 dictConfig({
     'version': 1,
@@ -37,8 +34,6 @@ app = Flask(__name__, static_folder='../www', static_url_path='/nearbyaircraft')
 app.logger.debug("Logger initialized")
 app.logger.debug(f"WSGI errors stream: {os.environ.get('wsgi.errors')}")
 
-app.logger.debug(21)
-
 # Database configuration
 DATABASE_PATH = '/home/admin/nearbyaircraft/functions/recolheVoos/voos.db'
 
@@ -55,7 +50,6 @@ CACHE_DURATION = 30  # seconds
 @app.route('/api/madrug2', methods=['POST', 'OPTIONS'], strict_slashes=False)
 def madrug2_api():
     """Process flight data from SQLite"""
-    app.logger.debug("34")
     if request.method == 'OPTIONS':
         response = make_response()
         response.headers.add("Access-Control-Allow-Origin", "*")
@@ -83,7 +77,7 @@ def madrug2_api():
                 records, 
                 float(data['latitudeRef']), 
                 float(data['longitudeRef']), 
-                float(data['altitudeRef']), callsign_filter="RYR7052"
+                float(data['altitudeRef'])
             )
             if closest and closest.get("timestamp") is not None:
                 resultados.append(closest)
@@ -145,8 +139,6 @@ def flight_paths():
         rows = cursor.fetchall()
         conn.close()
 
-        # print(rows)
-
         # Group rows by call_sign
         flight_paths = {}
         for row in rows:
@@ -159,6 +151,7 @@ def flight_paths():
             record['latitude'] = record['latitude'] if record['latitude'] is not None else 'n.a.'
             record['longitude'] = record['longitude'] if record['longitude'] is not None else 'n.a.'
             record['timestamp'] = record['timestamp'] or ''
+            
             for key, value in record.items():
                 if value is None:
                     print(f"Warning: {key} is None in record {record}")
@@ -264,7 +257,6 @@ def disable_cache(response):
 
 def get_flights_for_date(date):
     """Retrieve flights from SQLite for a specific date"""
-    app.logger.debug("240")
     conn = sqlite3.connect(DATABASE_PATH)
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
@@ -309,17 +301,14 @@ def interpolate_sql_timestamps(timestamp1, timestamp2):
     # Remove ' UTC' if present
     timestamp1 = timestamp1.replace(' UTC', '')
     timestamp2 = timestamp2.replace(' UTC', '')
-    app.logger.debug(f"[278] Raw timestamps: {timestamp1}, {timestamp2}")
-
+    
     # Parse the input strings into datetime objects
     ts1 = datetime.strptime(timestamp1, '%Y-%m-%d %H:%M:%S')
     ts2 = datetime.strptime(timestamp2, '%Y-%m-%d %H:%M:%S')
-    app.logger.debug(f"[283] Parsed datetimes: {ts1}, {ts2}")
     
     # Calculate the midpoint using datetime arithmetic
     midpoint = datetime.fromtimestamp((ts1.timestamp() + ts2.timestamp()) / 2)
-    app.logger.debug(f"[288] Midpoint: {midpoint}")
-
+    
     # Return formatted string
     return midpoint.strftime('%Y-%m-%d %H:%M:%S')
 
@@ -356,27 +345,20 @@ def find_closest_point(records, lat_ref, lon_ref, alt_ref, callsign_filter=None)
             rec['latitude'], rec['longitude'], rec['altitude'],
             lat_ref, lon_ref, alt_ref
         )
-        log.debug(f"[CHECK] Record[{i}] dist={dist:.2f} ts={rec['timestamp']}")
-
+        
         if dist < dist_min:
             dist_min = dist
             closest = copy.deepcopy(rec)
             closest['distance'] = dist
-            log.debug(f"[UPDATE] Closest set to record[{i}] @ {rec['timestamp']} | dist={dist:.2f}")
-
+            
             # 2. Check midpoint with previous
             if i > 0:
                 prev = records[i - 1]
                 rec = records[i]
-                log.debug(f"[DEBUG] Record[{i - 1}] = lat={records[i - 1]['latitude']}, lon={records[i - 1]['longitude']}, alt={records[i - 1]['altitude']}")
-                log.debug(f"[DEBUG] Record[{i}]     = lat={records[i]['latitude']}, lon={records[i]['longitude']}, alt={records[i]['altitude']}")
                 lat_avg = (rec['latitude'] + prev['latitude']) / 2
                 lon_avg = (rec['longitude'] + prev['longitude']) / 2
                 alt_avg = (rec['altitude'] + prev['altitude']) / 2
-                log.debug(f"[DEBUG] Midpoint({i-1},{i}) coords: lat={lat_avg}, lon={lon_avg}, alt={alt_avg}")
-                log.debug(f"[DEBUG] Ref coords: lat={lat_ref}, lon={lon_ref}, alt={alt_ref}")
                 dist_prev = calculate_3d_distance(lat_avg, lon_avg, alt_avg, lat_ref, lon_ref, alt_ref)
-                log.debug(f"[CHECK] Midpoint({i-1},{i}) dist={dist_prev:.2f}")
                 if dist_prev < dist_min:
                     dist_min = dist_prev
                     closest = {
@@ -391,17 +373,14 @@ def find_closest_point(records, lat_ref, lon_ref, alt_ref, callsign_filter=None)
                         'country': rec['country'],
                         'climbing_rate': safe_avg(prev['climbing_rate'], rec['climbing_rate'])
                     }
-                    log.debug(f"[UPDATE] Closest set to midpoint({i-1},{i})")
-
+                    
             # 3. Check midpoint with next
             if i + 1 < len(records):
                 next_rec = records[i + 1]
                 lat_avg = (rec['latitude'] + next_rec['latitude']) / 2
                 lon_avg = (rec['longitude'] + next_rec['longitude']) / 2
                 alt_avg = (rec['altitude'] + next_rec['altitude']) / 2
-                log.debug(f"[DEBUG] Midpoint({i},{i+1}) coords: lat={lat_avg}, lon={lon_avg}, alt={alt_avg}")
                 dist_next = calculate_3d_distance(lat_avg, lon_avg, alt_avg, lat_ref, lon_ref, alt_ref)
-                log.debug(f"[CHECK] Midpoint({i},{i+1}) dist={dist_next:.2f}")
                 if dist_next < dist_min:
                     dist_min = dist_next
                     closest = {
@@ -416,8 +395,7 @@ def find_closest_point(records, lat_ref, lon_ref, alt_ref, callsign_filter=None)
                         'country': rec['country'],
                         'climbing_rate': safe_avg(rec['climbing_rate'], next_rec['climbing_rate'])
                     }
-                    log.debug(f"[UPDATE] Closest set to midpoint({i},{i+1})")
-
+                    
     if closest:
         log.debug(f"[FINAL] Closest point for {closest['call_sign']}: {closest['timestamp']} | dist={closest['distance']:.2f}")
     else:
@@ -427,5 +405,5 @@ def find_closest_point(records, lat_ref, lon_ref, alt_ref, callsign_filter=None)
     
 # -------- App Runner --------
 if __name__ == "__main__":
-    app.debug = True
+    app.debug = False
     app.run(host="0.0.0.0", port=5000)

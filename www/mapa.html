@@ -31,7 +31,7 @@
     // Fetch data and initialize the map
     async function initializeMap(dia) {
       // Fetch last day's flight records
-      const response = await fetch('/flightPaths?dia=' + dia); // Backend endpoint to serve flight data
+      const response = await fetch('/nearbyaircraft/flightPaths?dia=' + dia); // Backend endpoint to serve flight data
       const flightData = await response.json();
       console.log(flightData);
 

@@ -130,7 +130,7 @@
     document.getElementById('trigger-button').addEventListener('click', () => {
       // Open the /flightPaths page in a new tab
       console.log('/mapa?dia='+document.getElementById('dia').value + '&lat='+base.latitudeRef + '&long='+base.longitudeRef);
-      window.open('/mapa?dia='+document.getElementById('dia').value
+      window.open('/nearbyaircraft/mapa?dia='+document.getElementById('dia').value
                   + '&lat='+base.latitudeRef + '&long='+base.longitudeRef, '_blank');
     });
     

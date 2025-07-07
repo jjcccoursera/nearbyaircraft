@@ -21,6 +21,8 @@ Métodos principais:
 - process_date: Processa todos os voos de uma data específica
 - distMin: Função principal que orquestra todo o processamento
 
+https://chat.deepseek.com/a/chat/s/6c4e6308-523b-4f48-9a42-2ba83037f5d6
+
 """
 
 def calculate_3d_distance(lat1, lon1, alt1, lat2, lon2, alt2):

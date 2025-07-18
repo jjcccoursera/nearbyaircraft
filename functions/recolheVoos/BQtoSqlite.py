@@ -166,7 +166,7 @@ def copy_data_for_dates(bq_client, sqlite_conn, cutoff_date):
         timestamp_str = format_timestamp_for_sqlite(row.timestamp)
         
         # DEBUG: Uncomment to verify formatting
-        print(f"Before: {row.timestamp} -> After: {timestamp_str}")
+        # print(f"Before: {row.timestamp} -> After: {timestamp_str}")
         
         cursor.execute(insert_sql, (
             timestamp_str,

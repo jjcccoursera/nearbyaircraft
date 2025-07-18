@@ -93,6 +93,53 @@ def madrug2_api():
         app.logger.error(f"Error in madrug2: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/madrug3', methods=['POST', 'OPTIONS'], strict_slashes=False)
+def madrug3_api():
+    """Process flight data from SQLite"""
+    if request.method == 'OPTIONS':
+        response = make_response()
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        response.headers.add("Access-Control-Allow-Headers", "*")
+        response.headers.add("Access-Control-Allow-Methods", "*")
+        return response
+
+    try:
+        data = request.get_json()
+        required = ['dia', 'latitudeRef', 'longitudeRef', 'altitudeRef']
+        if not all(k in data for k in required):
+            return jsonify({"error": "Missing required parameters"}), 400
+
+        # Get flights from SQLite
+        flights = get_flights_for_date(data['dia'])
+        
+        # Process results
+        resultados = []
+        for callsign, records in flights.items():
+            if not records:
+                continue
+                
+            # Find closest point (using your existing Python functions)
+            closest = find_closest_point3(
+                records, 
+                float(data['latitudeRef']), 
+                float(data['longitudeRef']), 
+                float(data['altitudeRef'])
+            )
+            if closest and closest.get("timestamp") is not None:
+                resultados.append(closest)
+            else:
+                app.logger.warning(f"Skipping {callsign}: closest point is None or missing timestamp")
+            
+        # Sort by timestamp
+        resultados.sort(key=lambda x: x['timestamp'])
+        
+        return jsonify(resultados), 200
+
+    except Exception as e:
+        app.logger.error(f"Error in madrug2: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route('/flightPaths')
 def flight_paths():
     try:
@@ -297,7 +344,7 @@ def calculate_3d_distance(lat1, lon1, alt1, lat2, lon2, alt2):
     
     return math.sqrt(surface_distance**2 + vertical_distance**2)
 
-def interpolate_sql_timestamps(timestamp1, timestamp2):
+def interpolate_sql_timestamps(timestamp1, timestamp2, fraction=0.5):
     # Remove ' UTC' if present
     timestamp1 = timestamp1.replace(' UTC', '')
     timestamp2 = timestamp2.replace(' UTC', '')
@@ -307,19 +354,23 @@ def interpolate_sql_timestamps(timestamp1, timestamp2):
     ts2 = datetime.strptime(timestamp2, '%Y-%m-%d %H:%M:%S')
     
     # Calculate the midpoint using datetime arithmetic
-    midpoint = datetime.fromtimestamp((ts1.timestamp() + ts2.timestamp()) / 2)
+    # midpoint = datetime.fromtimestamp((ts1.timestamp() + ts2.timestamp()) / 2)
     
-    # Return formatted string
-    return midpoint.strftime('%Y-%m-%d %H:%M:%S')
+    # Calculate the interpolated timestamp using the given fraction
+    interpolated = datetime.fromtimestamp(ts1.timestamp() + fraction * (ts2.timestamp() - ts1.timestamp()))
 
-def safe_avg(a, b):
+    # Return formatted string
+    return interpolated.strftime('%Y-%m-%d %H:%M:%S')
+
+def safe_avg(a, b, fraction=0.5):
     if a is None and b is None:
         return None
     if a is None:
         return b
     if b is None:
         return a
-    return (a + b) / 2
+    # return (a + b) / 2
+    return a + fraction * (b - a)  # Linear interpolation
 
 def find_closest_point(records, lat_ref, lon_ref, alt_ref, callsign_filter=None):
     import copy
@@ -402,6 +453,77 @@ def find_closest_point(records, lat_ref, lon_ref, alt_ref, callsign_filter=None)
         log.debug("[FINAL] No closest point found.")
     return closest
 
+def find_closest_point3(records, lat_ref, lon_ref, alt_ref, callsign_filter=None):
+    import copy
+    import logging
+    from datetime import datetime
+
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s')
+    log = logging.getLogger()
+
+    if not records:
+        return None
+    
+    dist_min = float('inf')
+    closest = None
+
+    for i in range(len(records)):
+        rec = records[i]
+        if callsign_filter and rec.get('call_sign') != callsign_filter:
+            continue  # Skip logging for other flights
+
+        # 1. Always check the current record point
+        dist = calculate_3d_distance(
+            rec['latitude'], rec['longitude'], rec['altitude'],
+            lat_ref, lon_ref, alt_ref
+        )
+        
+        if dist < dist_min:
+            dist_min = dist
+            closest = copy.deepcopy(rec)
+            closest['distance'] = dist
+            
+        # 2. Check interpolated points between current and next record
+        # Only do this if we're not at the last record
+        if i < len(records) - 1:
+            next_rec = records[i + 1]
+            
+            # Define the interpolation fractions (25%, 50%, 75%)
+            fractions = [0.25, 0.5, 0.75]
+            
+            for fraction in fractions:
+                # Calculate interpolated values
+                lat_interp = safe_avg(rec['latitude'], next_rec['latitude'], fraction)
+                lon_interp = safe_avg(rec['longitude'], next_rec['longitude'], fraction)
+                alt_interp = safe_avg(rec['altitude'], next_rec['altitude'], fraction)
+                
+                # Calculate distance for this interpolated point
+                dist_interp = calculate_3d_distance(
+                    lat_interp, lon_interp, alt_interp,
+                    lat_ref, lon_ref, alt_ref
+                )
+                
+                if dist_interp < dist_min:
+                    dist_min = dist_interp
+                    closest = {
+                        'call_sign': rec['call_sign'],
+                        'distance': dist_interp,
+                        'timestamp': interpolate_sql_timestamps(rec['timestamp'], next_rec['timestamp'], fraction),
+                        'latitude': lat_interp,
+                        'longitude': lon_interp,
+                        'altitude': alt_interp,
+                        'velocidade': safe_avg(rec['velocidade'], next_rec['velocidade'], fraction),
+                        'tipo': rec['tipo'],
+                        'country': rec['country'],
+                        'climbing_rate': safe_avg(rec['climbing_rate'], next_rec['climbing_rate'], fraction)
+                    }
+                    
+    # Now the last record has been checked (as a point, not for interpolation)
+    if closest:
+        log.debug(f"[FINAL] Closest point for {closest['call_sign']}: {closest['timestamp']} | dist={closest['distance']:.2f}")
+    else:
+        log.debug("[FINAL] No closest point found.")
+    return closest
     
 # -------- App Runner --------
 if __name__ == "__main__":

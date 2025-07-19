@@ -354,8 +354,9 @@ def find_closest_point3(records, lat_ref, lon_ref, alt_ref, callsign_filter=None
             next_rec = records[i + 1]
             
             # Define the interpolation fractions (25%, 50%, 75%)
-            fractions = [0.25, 0.5, 0.75]
-            
+            # fractions = [0.25, 0.5, 0.75]
+            fractions = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+
             for fraction in fractions:
                 # Calculate interpolated values
                 lat_interp = safe_avg(rec['latitude'], next_rec['latitude'], fraction)

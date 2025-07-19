@@ -1,0 +1,168 @@
+
+scp -r ~/ar25/ar25port admin@jc.vps.webdock.cloud:~
+
+ssh -L 8080:localhost:8080 admin@193.181.208.117
+
+python3 -m venv venv
+source venv/bin/activate
+
+gunicorn -w 4 -b 127.0.0.1:5000 main:app
+
+curl http://127.0.0.1:5000
+ 
+sudo nginx -t
+sudo systemctl reload nginx
+
+sudo apt install certbot python3-certbot-nginx
+sudo certbot --nginx -d jc.vps.webdock.cloud
+sudo nano /etc/systemd/system/gunicorn.service
+
+sudo systemctl start gunicorn
+sudo systemctl status gunicorn
+
+curl -i "https://nearbyaircraft.ew.r.appspot.com/api?lat=41.1653349&long=-8.6758848&alt=0"
+
+
+zip -r ar25port.zip ar25port -x "ar25port/venv/**"
+
+scp admin@193.181.208.117:/home/admin/nearbyaircraft/functions/recolheVoos/recolheVoos.py ~/nearbyaircraft/nearbyaircraftport/functions/recolheVoos/
+
+sudo nano /etc/nginx/conf.d/default.conf
+sudo nginx -t
+sudo systemctl reload nginx
+
+cd backend
+source venv/bin/activate
+gunicorn -w 4 -b 127.0.0.1:5001 app:app
+sudo systemctl stop gunicorn
+gunicorn -w 4 -b 127.0.0.1:5000 app:app
+
+sudo netstat -tulnp | grep 3001
+sudo netstat -tulnp | grep 5000
+curl http://0.0.0.0:5000
+sudo lsof -i :5000
+kill 23433
+
+CLOUD_SHELL:IP=$(curl -s ifconfig.me) && echo "Cloud Shell IP: $CLOUD_SHELL_IP"
+sudo ufw allow from $CLOUD_SHELL_IP to any port 8080
+echo "Cloud Shell IP: $CLOUD_SHELL_IP"
+CLOUD_SHELL_IP=$(curl -s ifconfig.me) && echo "Cloud Shell IP: $CLOUD_SHELL_IP"
+sudo ufw allow from $CLOUD_SHELL_IP to any port 8080
+sudo ufw deny 8080
+echo "Cloud Shell IP: $CLOUD_SHELL_IP"code-server --bind-addr 127.0.0.1:8080 --auth none
+code-server --bind-addr 127.0.0.1:8080 --auth none
+
+code-server --bind-addr 127.0.0.1:8080 --auth none
+cd backend
+source venv/bin/ activate
+gunicorn -b 127.0.0.1:3001 app:app
+kill -TERM 63716
+gunicorn -b 127.0.0.1:3001 app:app
+
+code-server --bind-addr 127.0.0.1:8080 --auth none
+cd nearbyaircraft
+git init
+git checkout --orphan webdock
+git status
+git add .
+git status
+git rm functions/distmin/venv/
+git rm functions/distMin/venv/
+git rm -r functions/distMin/venv/
+git status
+git rm -r functions/distMin/venv
+git status
+git rm -r --cached nearbyaircraft/functions/distMin/venv
+git rm -r --cached nearbyaircraft/functions/distMin/venv/
+git rm -r --cached nearbyaircraft/functions/distMin/venv/*.*
+git rm -r --cached nearbyaircraft/functions/distMin/venv/*
+git rm -r --cached functions/distMin/venv/*
+git rm -r --cached functions/distMin/venv/
+git status
+git rm -r --cached backend/venv/
+git status
+git rm -r --cached backend/__pycache__
+git add .gitignore
+git rm -r --cached backend/__pycache__
+git status
+git branch
+git commit
+git config --global user.email "jcarmona.coursera@gmail.com"
+git config --global user.name "jjccoursera"
+git commit
+git remote add origin https://github.com/jjccoursera/nearbyaircraft.git
+git push origin webdock
+git remote add origin https://github.com/jjcccoursera/nearbyaircraft.git
+git remote set-url origin https://github.com/jjcccoursera/nearbyaircraft.git
+git push origin webdock
+
+cd backend
+source venv/bin/activate
+FLASK_APP=app.py flask run --host=0.0.0.0 --port=3001
+FLASK_APP=app.py flask run --host=0.0.0.0 --port=3002
+git status
+git add.py
+git commit
+git add app.py
+git commit
+git push origin webdock
+cd ..
+cd functions
+cd recolheVoos
+ls
+sqlite3 /home/admin/nearbyaircraft/functions/recolheVoos/voos.db <<EOF
+DELETE FROM brutos;
+.mode csv
+.import brutos.csv brutos
+EOF
+
+sqlite3
+sqlite3 /home/admin/nearbyaircraft/functions/recolheVoos/voos.db
+columns=$(sqlite3 /home/admin/nearbyaircraft/functions/recolheVoos/voos.db "
+PRAGMA table_info(brutos);
+" | awk -F'|' '$2 != "id" {print $2}' | tr '\n' ',' | sed 's/,$//')
+echo "Columns to import: $columns"
+sqlite3 /home/admin/nearbyaircraft/functions/recolheVoos/voos.db <<EOF
+-- Clear existing data
+DELETE FROM brutos;
+
+-- Create temp table
+CREATE TEMP TABLE temp_import AS SELECT * FROM brutos WHERE 1=0;
+
+-- Import CSV (replace path)
+.mode csv
+.import brutos.csv temp_import
+
+-- Copy data to main table
+INSERT INTO brutos ($columns)
+SELECT $columns FROM temp_import;
+
+-- Clean up
+DROP TABLE temp_import;
+
+-- Verify count
+SELECT 'Rows imported: ' || COUNT(*) FROM brutos;
+EOF
+
+sqlite3 /home/admin/nearbyaircraft/functions/recolheVoos/voos.db "
+SELECT 'Total rows:', COUNT(*) FROM brutos;
+"
+sqlite3 /home/admin/nearbyaircraft/functions/recolheVoos/voos.db <<EOF
+.headers on
+.mode column
+.width 5 20 15 10 15  # Adjust column widths as needed
+SELECT * FROM brutos LIMIT 10;
+EOF
+
+nano /home/admin/.config/code-server/config.yaml
+sudo ufw allow from 193.181.208.117 to any port 8080
+sudo ufw deny 8080
+
+htop
+
+curl -X POST   http://localhost:3002/api/madrug2   -H "Content-Type: application/json"   -d '{"dia": "2025-07-01", "latitudeRef": "38.6", "longitudeRef": "-8.16", "altitudeRef": "0"}'
+
+sudo nginx -t && sudo systemctl reload nginx
+sudo nano /etc/nginx/conf.d/default.conf
+
+

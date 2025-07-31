@@ -73,14 +73,17 @@
 
           // Check and format the timestamp
           let formattedTimestamp = 'N/A';
-          if (record.timestamp && record.timestamp.value) {
+          if (record.timestamp) {
             try {
-              // Parse the timestamp string and create a new Date object
-              const date = new Date(record.timestamp.value);
+              // Get the timestamp value - try different approaches
+              const timestampValue = record.timestamp.value || record.timestamp;
               
+              // Parse the timestamp
+              const date = new Date(timestampValue);
+
               // Ensure the date was parsed correctly
-              if (isNaN(date)) {
-                console.error('Invalid date:', record.timestamp.value);
+              if (isNaN(date.getTime())) {
+                console.error('Invalid date:', timestampValue, 'Original timestamp:', record.timestamp);
               } else {
                 // Convert the timestamp to Lisbon time
                 formattedTimestamp = date.toLocaleString('en-GB', { timeZone: 'Europe/Lisbon' });

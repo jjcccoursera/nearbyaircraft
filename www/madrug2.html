@@ -162,8 +162,8 @@
       base.latitudeRef = latitude;
       base.longitudeRef = longitude;
 
-      const roundedLatitude = parseFloat(latitude.toFixed(3));
-      const roundedLongitude = parseFloat(longitude.toFixed(3));
+      const roundedLatitude = parseFloat(latitude);
+      const roundedLongitude = parseFloat(longitude);
       const roundedAltitude = Math.round(altitude);
 
       const dados = {

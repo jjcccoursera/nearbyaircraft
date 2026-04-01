@@ -291,7 +291,7 @@ def calculate_3d_distance(lat1, lon1, alt1, lat2, lon2, alt2):
     c = 2*math.atan2(math.sqrt(a), math.sqrt(1-a))
     surface_distance = R * c
     vertical_distance = alt2 - alt1
-    
+
     return math.sqrt(surface_distance**2 + vertical_distance**2)
 
 def interpolate_sql_timestamps(timestamp1, timestamp2, fraction=0.5):

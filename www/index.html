@@ -73,7 +73,7 @@
 
     async function fetchAircraftData(lat, long, alt) {
       // const url = "https://opensky-network.org/api/states/all?lamin="+(lat-0.5)+"&lomin="+(long-0.5)+"&lamax="+(lat+0.5)+"&lomax="+(long+0.5);
-      const url = "https://nearbyaircraft.ew.r.appspot.com/api?lat="+lat+"&long="+long+"&alt=0";
+      const url = "https://jc.vps.webdock.cloud/nearbyaircraft/api?lat="+lat+"&long="+long+"&alt=0";
 
       try {
         const response = await fetch(url);

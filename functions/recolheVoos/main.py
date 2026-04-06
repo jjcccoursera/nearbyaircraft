@@ -4,8 +4,6 @@ from datetime import datetime
 from dateutil.parser import parse
 import pytz
 
-# https://chat.deepseek.com/a/chat/s/ea23de2b-640c-44d1-beb3-8a40adccb157
-# ajuste DST
 
 def recolheVoos(data, context):
 # def recolheVoos():

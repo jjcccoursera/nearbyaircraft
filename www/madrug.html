@@ -84,8 +84,7 @@
 
     document.getElementById('trigger-button').addEventListener('click', () => {
       // Open the /flightPaths page in a new tab
-      window.open('/mapa?dia='+document.getElementById('dia').value
-                  + '&lat=41.1653349&long=8.6758848', '_blank');
+      window.open('/mapa?dia='+dia.value, '_blank');
     });
     
     function outroDia(show) {

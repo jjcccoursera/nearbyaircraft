@@ -1,2 +1,28 @@
-# Google App Engine generated folder
-appengine-generated/
+# Node.js
+node_modules/
+npm-debug.log
+package-lock.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+
+# Google Cloud & Secrets
+.googleconfig
+source-context.json
+.env
+*.key
+*.json
+!package.json
+!app.yaml
+
+# OS files
+.DS_Store
+
+arquivo/funcoes_extraidas
+madrug2/node_modules
+madrug2/package-lock.json
+ligar_vnc.sh

@@ -12,5 +12,7 @@
 # below:
 .git
 .gitignore
+.googleconfig
 
-node_modules
+# Node.js dependencies:
+node_modules/

@@ -72,8 +72,8 @@
   <script>
 
     async function fetchAircraftData(lat, long, alt) {
-      const url = "https://opensky-network.org/api/states/all?lamin="+(lat-0.5)+"&lomin="+(long-0.5)+"&lamax="+(lat+0.5)+"&lomax="+(long+0.5);
-
+      // const url = "https://opensky-network.org/api/states/all?lamin="+(lat-0.5)+"&lomin="+(long-0.5)+"&lamax="+(lat+0.5)+"&lomax="+(long+0.5);
+      const url = "https://jc.vps.webdock.cloud/nearbyaircraft/api?lat="+lat+"&long="+long+"&alt=0";
 
       try {
         const response = await fetch(url);
@@ -83,7 +83,7 @@
         }
 
         const data = await response.json();
-        console.log(data.states);
+        console.log(data.aircraft);
         const tableBody = document.getElementById('aircraftData');
         while (tableBody.hasChildNodes()) {
           tableBody.removeChild(tableBody.lastChild);
@@ -94,31 +94,31 @@
         row.innerHTML = `
           <td colspan="5">${dat.slice(0,25)}</td>
         `;
-        if (data.states == null) {
+        if (data.aircraft == null) {
           const row = document.createElement('tr');
           row.innerHTML = `
             <td>No aircraft nearby</td>
           `;
           tableBody.appendChild(row);
         } else {
-          data.states.forEach(state => {
+          data.aircraft.forEach(state => {
             const row = document.createElement('tr');
-            const distance = calculate3DDistance(lat, long, 0, state[6], state[5], state[13]);
+            const distance = calculate3DDistance(lat, long, 0, state[5], state[6], state[13]);
             console.log(distance);
             let altit = "n.a.";
-            if (state[13] !== null) {
-              altit = state[13];
+            if (state[3] !== null) {
+              altit = state[3];
             }
-            let rate = "n.a.";
-            if (state[11] !== null) {
-              rate = state[11].toFixed(1);
-            }
+            // let rate = "n.a.";
+            // if (state[4] !== 'n.a.') {
+            //   rate = state[4].toFixed(1);
+            // }
             row.innerHTML = `
-              <td style="color: green">${state[1]}</td>
-              <td>${state[2]}  </td>
-              <td style="color: green">${distance.toLocaleString('en-US', {maximumFractionDigits:1})}</td>
+              <td style="color: green">${state[0]}</td>
+              <td>${state[1]}  </td>
+              <td style="color: green">${state[2]}</td>
               <td>${altit.toLocaleString('en-US', {maximumFractionDigits:1})}</td>
-              <td>${rate}</td>
+              <td>${state[4]}</td>
             `;
             tableBody.appendChild(row);
           });

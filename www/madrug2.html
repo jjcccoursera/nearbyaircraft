@@ -23,7 +23,7 @@
   <table id="Cab" style="width: 100%; font-family: arial">
     <tr style="color: white; background-color: green; border: 3px solid green;
                 font-family:arial; font-size: 20px">
-        <td width="100%" style="padding: 20px">
+        <td width="100%" style="padding: 20px" id="madrug">
             <div style="color:rgb(128, 248, 128); text-align: center">
                 <b> Voos madrugadores </b>
             </div>
@@ -42,38 +42,38 @@
     de <span style="font-size: 12px">(lat, long, alt; especifique ou duplo clique para escolher):</span> </label> <br />
     <input list="locations" id="coordinates"  
     style="color: green; font-family:arial; font-size: 16px; text-align: center"
-    size="51" autocomplete="off" value="41.168047, -8.66074, 60"
+    size="51" autocomplete="off" value="41.163484, -8.669470, 30"
     onchange="calcular(show)" />
     <datalist id="locations">
-            <option value="Câm. Mun. do Porto: 41.157944, -8.629105, 70">
-            <option value="Câm. Mun. de Gaia: 41.133647, -8.611042, 60">
-            <option value="Câm. Mun. de Matosinhos: 41.186549, -8.689858, 80">
-            <option value="Câm. Mun. da Maia: 41.233044, -8.619238, 50">
-            <option value="Câm. Mun. de Gondomar: 41.144550, -8.532824, 40">
-            <option value="Câm. Mun. de Vila do Conde: 41.354810, -8.747206, 55">
-            <option value="Câm. Mun. da Póvoa de Varzim: 41.379658, -8.760439, 45">
-            <option value="Câm. Mun. de Valongo: 41.187858, -8.498251, 65">
-            <option value="Casa da Música: 41.155082, -8.611398, 20">
-            <option value="Ribeira: 41.140607, -8.611071, 15">
-            <option value="Ponte de Leça: 41.194791, -8.687710, 30">
-            <option value="Aeroporto do Porto: 41.235718, -8.678617, 25">
-            <option value="Castelo do Queijo: 41.167610, -8.689909, 10">
-            <option value="Senhor da Pedra: 41.109592, -8.653928, 35">
-            <option value="Estação de Campanhã: 41.149979, -8.583583, 40">
-            <option value="Estação de S. Bento: 41.145321, -8.610129, 35">
-            <option value="Fonte da Moura: 41.168047, -8.66074, 60">
-            <option value="Estádio do Dragão: 41.161735, -8.583293, 55">
-            <option value="Estádio do Bessa: 41.164911, -8.632892, 50">
-            <option value="Estádio do Mar: 41.191630, -8.692160, 45">
-            <option value="Hospital Santo António: 41.151726, -8.619084, 35">
-            <option value="Hospital de S. João: 41.180856, -8.596905, 70">
-            <option value="Hospital de Matosinhos: 41.182588, -8.687340, 25">
-            <option value="Hospital de Gaia: 41.120749, -8.610924, 20">
-            <option value="Liceu Garcia de Orta: 41.157250, -8.655052, 30">
-            <option value="Liceu Rodrigues de Freitas: 41.142783, -8.611147, 40">
-            <option value="Liceu Alexandre Herculano: 41.154888, -8.599647, 45">
-            <option value="Liceu António Nobre: 41.170642, -8.616084, 50">    
-        </datalist>
+      <option value="Câm. Mun. do Porto: 41.15, -8.61024, 70">
+      <option value="Câm. Mun. de Gaia: 41.13, -8.60663, 60">
+      <option value="Câm. Mun. de Matosinhos: 41.18345, -8.68284, 20">
+      <option value="Câm. Mun. da Maia: 41.23342, -8.62263, 50">
+      <option value="Câm. Mun. de Gondomar: 41.14414, -8.53642, 40">
+      <option value="Câm. Mun. de Vila do Conde: 41.35412, -8.747348, 55">
+      <option value="Câm. Mun. da Póvoa de Varzim: 41.37964, -8.75985, 45">
+      <option value="Câm. Mun. de Valongo: 41.19127, -8.49775, 65">
+      <option value="Casa da Música: 41.15896, -8.63069, 55">
+      <option value="Ribeira: 41.14064, -8.61165, 15">
+      <option value="Castelo do Queijo: 41.16873, -8.68978, 10">
+      <option value="Senhor da Pedra: 41.06959, -8.65789, 35">
+      <option value="Ponte de Leça: 41.18909, -8.69441, 30">
+      <option value="Aeroporto do Porto: 41.24754, -8.68065, 25">
+      <option value="Estação de Campanhã: 41.14992, -8.58589, 40">
+      <option value="Estação de S. Bento: 41.14567, -8.60953, 35">
+      <option value="Fonte da Moura: 41.16425, -8.662, 30">
+      <option value="Estádio do Dragão: 41.16193, -8.5837, 55">
+      <option value="Estádio do Bessa: 41.16262, -8.64305, 50">
+      <option value="Estádio do Mar: 41.18408, -8.66687, 45">
+      <option value="Hospital Santo António: 41.14726, -8.61827, 35">
+      <option value="Hospital de S. João: 41.18418, -8.60053, 70">
+      <option value="Hospital de Matosinhos: 41.18906, -8.66422, 25">
+      <option value="Hospital de Gaia: 41.106, -8.59192, 60">
+      <option value="Liceu Garcia de Orta: 41.163484, -8.669470, 30"></option>
+      <option value="Liceu Rodrigues de Freitas: 41.1558, -8.62309, 40"></option>
+      <option value="Liceu Alexandre Herculano: 41.14887, -8.59463, 45"></option>
+      <option value="Liceu António Nobre: 41.16799, -8.60092, 50"></option>  
+    </datalist>
     
     <br><br>
     
@@ -148,7 +148,6 @@
       }
 
       let [latitude, longitude, altitude] = coords;
-
       latitude = parseFloat(latitude);
       longitude = parseFloat(longitude);
       altitude = parseFloat(altitude);
@@ -158,12 +157,12 @@
         return;
       }
 
-      const roundedLatitude = parseFloat(latitude.toFixed(3));
-      const roundedLongitude = parseFloat(longitude.toFixed(3));
+      const roundedLatitude = parseFloat(latitude);
+      const roundedLongitude = parseFloat(longitude);
       const roundedAltitude = Math.round(altitude);
 
       const dados = {
-        dia: dia,
+        dia: queryDate, // estava dia
         latitudeRef: roundedLatitude,
         longitudeRef: roundedLongitude,
         altitudeRef: roundedAltitude
@@ -330,26 +329,28 @@
 
     window.onload = function() { 
       const inputField = document.getElementById('dia'); 
-      inputField.value = dia; 
+      inputField.value = queryDate; // estava dia 
     }
     
     const show = ['Um', 'Dois', 'Três', 'Quatro', 'Cinco', 'Seis', 'Sete'];
+    
     const today = new Date();
-    const year = today.getFullYear(); 
-    const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-based, so add 1 
-    const day = String(today.getDate()-1).padStart(2, '0');
-    const dia = `${year}-${month}-${day}`;
-    const base = {
-          dia: dia,
-          latitudeRef: 41.179,
-          longitudeRef: -8.643,
-          altitudeRef: 70
-    };
-    console.log(dia);
-    document.getElementById('dia').innerHTML = dia;
-    if (window.innerwidth < 400) {
-      document.getElementById('coordinates').style.width = '36';
+    // Determine if we should query yesterday's flights
+    const queryTime = new Date().setHours(7, 15, 0, 0); // 8:15 AM in milliseconds
+    queryDate = today.toISOString().slice(0, 10);
+    if (today.getTime() < queryTime) {
+      const yesterday = new Date(today.getTime() - (1000 * 60 * 60 * 24));
+      queryDate = yesterday.toISOString().slice(0, 10); // YYYY-MM-DD format
     }
+    let base = {
+          dia: queryDate, // estava dia
+          latitudeRef: 41.163484,
+          longitudeRef: -8.669470,
+          altitudeRef: 30
+    };
+    document.getElementById('dia').value = queryDate; // estava dia
+    document.getElementById('coordinates').style.width =  document.getElementById('madrug').style.width 
+
     voos = madrug(show, base);
     console.log(voos);
 

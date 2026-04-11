@@ -1,120 +1,880 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mapa com voos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Animação de Voos - 3 horas em 6 minutos</title>
   <!-- Include Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
+
     #map {
-      height: 100vh; /* Full-page map */
-      width: 100%; /* Full screen width */
+      height: 100vh;
+      width: 100%;
     }
-    .tooltip-timestamp {
+
+    /* Aplicar filtro de escala de cinzentos apenas ao tile container */
+    .leaflet-tile-container img {
+      filter: grayscale(100%) contrast(90%) brightness(95%);
+    }
+
+    /* Garantir que os marcadores e outros elementos não sejam afetados */
+    .leaflet-marker-icon,
+    .leaflet-marker-shadow,
+    .leaflet-interactive,
+    .leaflet-popup,
+    .leaflet-control,
+    .leaflet-pane .leaflet-overlay-pane svg,
+    .leaflet-pane .leaflet-marker-pane img,
+    .leaflet-pane .leaflet-shadow-pane img {
+      filter: none !important;
+    }
+
+    /* Garantir que as polylines (rotas) mantenham as cores originais */
+    .leaflet-pane .leaflet-overlay-pane path {
+      filter: none !important;
+    }
+
+    /* Legendas no topo - minimizável */
+    .legend-container {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      padding: 8px 12px;
+      font-family: Arial, sans-serif;
+      font-size: 11px;
+      color: white;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .legend-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: bold;
+    }
+
+    .legend-title {
       font-size: 12px;
-      background: white;
-      padding: 2px;
-      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-    .leaflet-tile-container {
-      filter: grayscale(100%);
+
+    .legend-toggle {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 0 8px;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+
+    .legend-toggle:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .legend-content {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .legend-content.collapsed {
+      display: none;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+    }
+
+    .legend-color {
+      display: inline-block;
+      width: 20px;
+      height: 4px;
+      border-radius: 2px;
+    }
+
+    .marker-example {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .data-marker-example {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      border: 1px solid #333;
+    }
+
+    /* Controles no fundo - tamanho original */
+    .controls {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1000;
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      font-family: Arial, sans-serif;
+      min-width: 250px;
+    }
+
+    .time-display {
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      text-align: center;
+      color: #333;
+      font-family: monospace;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #ddd;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: #4CAF50;
+      transition: width 0.1s linear;
+      width: 0%;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    button {
+      flex: 1;
+      padding: 8px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+
+    .play-btn {
+      background: #4CAF50;
+      color: white;
+    }
+
+    .play-btn:hover {
+      background: #45a049;
+    }
+
+    .play-btn:active {
+      transform: scale(0.98);
+    }
+
+    .pause-btn {
+      background: #ff9800;
+      color: white;
+    }
+
+    .pause-btn:hover {
+      background: #e68900;
+    }
+
+    .pause-btn:active {
+      transform: scale(0.98);
+    }
+
+    .reset-btn {
+      background: #f44336;
+      color: white;
+    }
+
+    .reset-btn:hover {
+      background: #da190b;
+    }
+
+    .reset-btn:active {
+      transform: scale(0.98);
+    }
+
+    .speed-control {
+      margin-top: 10px;
+    }
+
+    .speed-control label {
+      font-size: 12px;
+      color: #666;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      margin-top: 5px;
+    }
+
+    .stats {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #666;
+      text-align: center;
+    }
+
+    /* Estilo para os tooltips dos marcadores */
+    .custom-tooltip {
+      font-size: 11px;
+      font-weight: bold;
+      background: rgba(0, 0, 0, 0.85);
+      color: white;
+      padding: 6px 10px;
+      border-radius: 4px;
+      border: 1px solid white;
+      white-space: nowrap;
+      font-family: monospace;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    /* Ajustes para mobile - apenas para tooltips e legenda */
+    @media (max-width: 768px) {
+      .custom-tooltip {
+        font-size: 9px;
+        padding: 3px 6px;
+      }
+
+      .legend-item {
+        font-size: 9px;
+      }
+
+      .controls {
+        min-width: 220px;
+        padding: 12px;
+      }
+
+      button {
+        padding: 8px;
+        font-size: 13px;
+      }
+
+      .time-display {
+        font-size: 14px;
+      }
     }
   </style>
 </head>
 <body>
   <div id="map"></div>
 
-  <!-- Include Leaflet JavaScript -->
+  <!-- Legenda minimizável no topo -->
+  <div class="legend-container" id="legendContainer">
+    <div class="legend-header">
+      <div class="legend-title">
+        <span>📊 Legenda</span>
+      </div>
+      <button class="legend-toggle" id="legendToggle">−</button>
+    </div>
+    <div class="legend-content" id="legendContent">
+      <div class="legend-item">
+        <div class="legend-color" style="background: #FF4444;"></div>
+        <span>Histórico do voo</span>
+      </div>
+      <div class="legend-item">
+        <div class="marker-example" style="background: #FF0000;"></div>
+        <span>Posição atual</span>
+      </div>
+      <div class="legend-item">
+        <div class="data-marker-example"></div>
+        <span>Ponto de dados (clicável)</span>
+      </div>
+      <div class="legend-item">
+        <div class="marker-example" style="background: #FFD700;"></div>
+        <span>Ponto referência</span>
+      </div>
+      <div class="legend-item">
+        <span>⏱️ 3h em 6min</span>
+      </div>
+      <div class="legend-item">
+        <span>📏 Altitude em metros</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="time-display" id="timeDisplay">--/--/---- --:--:--</div>
+    <div class="progress-bar" id="progressBar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+    <div class="button-group">
+      <button class="play-btn" id="playBtn">▶ Play</button>
+      <button class="pause-btn" id="pauseBtn">⏸ Pause</button>
+      <button class="reset-btn" id="resetBtn">⟳ Reset</button>
+    </div>
+    <div class="speed-control">
+      <label>Velocidade da animação: <span id="speedValue">1x</span></label>
+      <input type="range" id="speedSlider" min="0.25" max="2" step="0.25" value="1">
+    </div>
+    <div class="stats" id="stats">
+      Voos ativos: 0
+    </div>
+  </div>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // Fetch data and initialize the map
-    async function initializeMap(dia) {
-      // Fetch last day's flight records
-      const response = await fetch('/flightPaths?dia=' + dia); // Backend endpoint to serve flight data
-      const flightData = await response.json();
-      console.log(flightData);
+    let map;
+    let flightData = {};
+    let flightPaths = {};
+    let flightMarkers = {};
+    let dataMarkers = {};
+    let currentProgress = 0;
+    let isPlaying = false;
+    let speed = 1;
+    let referenceMarker;
+    let latitudeRef, longitudeRef;
+    let animationFrameId = null;
+    let globalMinTime, globalMaxTime;
+    let shownDataPoints = {};
 
-      // Initialize the map and set its view to Casa da Música with a zoom level of 13
-      const map = L.map('map').setView([41.1579, -8.6291], 13);
+    // Get URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const dia = urlParams.get('dia');
+    latitudeRef = parseFloat(urlParams.get('lat')) || 41.1579;
+    longitudeRef = parseFloat(urlParams.get('long')) || -8.6291;
 
-      // Add OpenStreetMap tiles
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      }).addTo(map);
+    console.log('Dia:', dia, 'Referência:', latitudeRef, longitudeRef);
 
-      // Process and display flight paths
-      const colors = ['red', 'blue', 'green', 'orange', 'purple', 'yellow', 'pink', 'black'];
-      let colorIndex = 0;
+    // Legend toggle functionality
+    let legendCollapsed = false;
+    document.getElementById('legendToggle').addEventListener('click', (e) => {
+      e.stopPropagation();
+      legendCollapsed = !legendCollapsed;
+      const legendContent = document.getElementById('legendContent');
+      const toggleBtn = document.getElementById('legendToggle');
 
-      for (const callsign in flightData) {
-        const records = flightData[callsign];
-        const latlngs = records.map(record => [record.latitude, record.longitude]);
-        console.log(records);
+      if (legendCollapsed) {
+        legendContent.classList.add('collapsed');
+        toggleBtn.textContent = '+';
+      } else {
+        legendContent.classList.remove('collapsed');
+        toggleBtn.textContent = '−';
+      }
+    });
 
-        // Draw flight path
-        const polyline = L.polyline(latlngs, { color: colors[colorIndex++ % colors.length] }).addTo(map);
+    // Convert feet to meters
+    function feetToMeters(feet) {
+      if (!feet && feet !== 0) return null;
+      return Math.round(feet * 0.3048);
+    }
 
-        // Add hoverable markers for timestamps
-        records.forEach(record => {
-          const marker = L.circleMarker([record.latitude, record.longitude], {
-            radius: 5,
-            color: 'black',
-          }).addTo(map);
-
-          // Check and format the timestamp
-          let formattedTimestamp = 'N/A';
-          if (record.timestamp && record.timestamp.value) {
-            try {
-              // Parse the timestamp string and create a new Date object
-              const date = new Date(record.timestamp.value);
-              
-              // Ensure the date was parsed correctly
-              if (isNaN(date)) {
-                console.error('Invalid date:', record.timestamp.value);
-              } else {
-                // Convert the timestamp to Lisbon time
-                formattedTimestamp = date.toLocaleString('en-GB', { timeZone: 'Europe/Lisbon' });
-              }
-            } catch (error) {
-              console.error('Error parsing timestamp:', record.timestamp.value, error);
-            }
-          } else {
-            console.warn('Timestamp missing or invalid for record:', record);
-          }
-        
-          // Tooltip for timestamp (on hover)
-          marker.bindTooltip(
-            `<span class="tooltip-timestamp">${formattedTimestamp}</span>`,
-            { permanent: false, direction: 'top' }
-          );
-
-          // Popup for detailed information (on click)
-          marker.bindPopup(
-            `<b>Call sign:</b> ${record.call_sign || 'N/A'} <br> 
-             <b>Data:</b> ${formattedTimestamp || 'N/A'} <br>
-             <b>Altitude:</b> ${record.altitude || 'N/A'} <br>
-             <b>m/s:</b> ${record.climbing_rate || 'N/A'} <br>
-             <b>Velocidade:</b> ${record.velocidade || 'N/A'} <br>`
-          );
-        });
-
+    // Get timestamp from record
+    function getTimestampValue(record) {
+      if (!record.timestamp) return null;
+      try {
+        const timestampValue = record.timestamp.value || record.timestamp;
+        const date = new Date(timestampValue);
+        return isNaN(date.getTime()) ? null : date.getTime();
+      } catch (error) {
+        return null;
       }
     }
 
-    // Get the current URL
-    const urlParams = new URLSearchParams(window.location.search); 
-    
-    // Extract the 'dia' parameter from the URL 
-    const dia = urlParams.get('dia'); 
-    
-    // Log the 'dia' parameter to the console 
-    console.log(111, 'Dia:', dia);
-    
-    // Initialize map after page load
-    initializeMap(dia);
-  
+    // Linear interpolation between two points
+    function interpolatePosition(record1, record2, fraction) {
+      if (!record1 || !record2) return null;
+
+      return {
+        lat: record1.latitude + (record2.latitude - record1.latitude) * fraction,
+        lng: record1.longitude + (record2.longitude - record1.longitude) * fraction,
+        altitude: record1.altitude + (record2.altitude - record1.altitude) * fraction,
+        velocidade: record1.velocidade + (record2.velocidade - record1.velocidade) * fraction,
+        climbing_rate: record1.climbing_rate + (record2.climbing_rate - record1.climbing_rate) * fraction,
+        call_sign: record1.call_sign
+      };
+    }
+
+    // Get position and index at specific time
+    function getPositionAndIndexAtTime(records, targetTime) {
+      if (!records || records.length === 0) return null;
+
+      const sortedRecords = [...records].sort((a, b) => {
+        return getTimestampValue(a) - getTimestampValue(b);
+      });
+
+      const firstTime = getTimestampValue(sortedRecords[0]);
+      const lastTime = getTimestampValue(sortedRecords[sortedRecords.length - 1]);
+
+      if (targetTime < firstTime) {
+        return null;
+      }
+
+      if (targetTime <= firstTime) {
+        return {
+          position: {
+            lat: sortedRecords[0].latitude,
+            lng: sortedRecords[0].longitude,
+            record: sortedRecords[0]
+          },
+          index: 0,
+          isFirst: true,
+          isLast: false
+        };
+      }
+
+      if (targetTime >= lastTime) {
+        return {
+          position: {
+            lat: sortedRecords[sortedRecords.length - 1].latitude,
+            lng: sortedRecords[sortedRecords.length - 1].longitude,
+            record: sortedRecords[sortedRecords.length - 1]
+          },
+          index: sortedRecords.length - 1,
+          isFirst: false,
+          isLast: true
+        };
+      }
+
+      for (let i = 0; i < sortedRecords.length - 1; i++) {
+        const time1 = getTimestampValue(sortedRecords[i]);
+        const time2 = getTimestampValue(sortedRecords[i + 1]);
+
+        if (targetTime >= time1 && targetTime <= time2) {
+          const fraction = (targetTime - time1) / (time2 - time1);
+          const interpolated = interpolatePosition(sortedRecords[i], sortedRecords[i + 1], fraction);
+          return {
+            position: {
+              lat: interpolated.lat,
+              lng: interpolated.lng,
+              record: interpolated
+            },
+            index: i,
+            isFirst: false,
+            isLast: false
+          };
+        }
+      }
+
+      return null;
+    }
+
+    // Get path history up to current time
+    function getPathHistory(records, currentTime) {
+      if (!records || records.length === 0) return [];
+
+      const sortedRecords = [...records].sort((a, b) => {
+        return getTimestampValue(a) - getTimestampValue(b);
+      });
+
+      const pathPoints = [];
+
+      for (const record of sortedRecords) {
+        const recordTime = getTimestampValue(record);
+        if (recordTime <= currentTime) {
+          pathPoints.push([record.latitude, record.longitude]);
+        } else {
+          break;
+        }
+      }
+
+      const lastRecordTime = getTimestampValue(sortedRecords[sortedRecords.length - 1]);
+      if (currentTime < lastRecordTime && currentTime > getTimestampValue(sortedRecords[0])) {
+        const position = getPositionAndIndexAtTime(records, currentTime);
+        if (position && !position.isFirst && !position.isLast) {
+          pathPoints.push([position.position.lat, position.position.lng]);
+        }
+      }
+
+      return pathPoints;
+    }
+
+    // Update or create path for a flight
+    function updateFlightPath(callsign, records, currentTime) {
+      const historyPath = getPathHistory(records, currentTime);
+
+      if (historyPath.length < 2) {
+        if (flightPaths[callsign] && flightPaths[callsign].polyline) {
+          map.removeLayer(flightPaths[callsign].polyline);
+          delete flightPaths[callsign];
+        }
+        return;
+      }
+
+      const color = flightPaths[callsign]?.color || getColorForCallsign(callsign);
+
+      if (flightPaths[callsign] && flightPaths[callsign].polyline) {
+        flightPaths[callsign].polyline.setLatLngs(historyPath);
+      } else {
+        const polyline = L.polyline(historyPath, {
+          color: color,
+          weight: 5,
+          opacity: 0.95,
+          lineJoin: 'round',
+          lineCap: 'round'
+        }).addTo(map);
+
+        flightPaths[callsign] = {
+          polyline: polyline,
+          color: color
+        };
+      }
+    }
+
+    // Show data point markers as they become visible
+    function updateDataMarkers(callsign, records, currentTime) {
+      if (!records || records.length === 0) return;
+
+      if (!dataMarkers[callsign]) {
+        dataMarkers[callsign] = [];
+      }
+
+      const sortedRecords = [...records].sort((a, b) => {
+        return getTimestampValue(a) - getTimestampValue(b);
+      });
+
+      for (let i = 0; i < sortedRecords.length; i++) {
+        const record = sortedRecords[i];
+        const recordTime = getTimestampValue(record);
+        const markerKey = `${callsign}_${recordTime}`;
+
+        if (recordTime <= currentTime && !shownDataPoints[markerKey]) {
+          shownDataPoints[markerKey] = true;
+
+          const altitudeMeters = feetToMeters(record.altitude);
+          const climbRateMeters = record.climbing_rate ? Math.round(record.climbing_rate * 0.3048) : null;
+
+          const marker = L.circleMarker([record.latitude, record.longitude], {
+            radius: 4,
+            color: '#FFFFFF',
+            fillColor: '#FFFFFF',
+            fillOpacity: 0.9,
+            weight: 2,
+            opacity: 0.9
+          }).addTo(map);
+
+          marker.bindPopup(`
+            <b>✈️ ${record.call_sign || callsign}</b><br>
+            <b>📅 Data original:</b> ${formatTimestamp(recordTime)}<br>
+            <b>📍 Posição registada</b><br>
+            <b>📊 Altitude:</b> ${altitudeMeters ? altitudeMeters + ' m' : 'N/A'}<br>
+            <b>⚡ Velocidade:</b> ${Math.round(record.velocidade || 0)} knots<br>
+            <b>📈 Razão de subida:</b> ${climbRateMeters ? climbRateMeters + ' m/min' : 'N/A'}<br>
+            <b>🌍 Coordenadas:</b> ${record.latitude.toFixed(4)}, ${record.longitude.toFixed(4)}
+          `);
+
+          dataMarkers[callsign].push(marker);
+        }
+      }
+    }
+
+    // Generate consistent saturated color for a callsign
+    const colorMap = {};
+    const colors = ['#FF0000', '#00FF00', '#0066FF', '#FF6600', '#CC00FF', '#00CCCC', '#FF0066', '#66FF00', '#FF00FF', '#00FFFF'];
+    function getColorForCallsign(callsign) {
+      if (!colorMap[callsign]) {
+        const index = Object.keys(colorMap).length % colors.length;
+        colorMap[callsign] = colors[index];
+      }
+      return colorMap[callsign];
+    }
+
+    // Remove all flight paths
+    function removeAllFlightPaths() {
+      for (const callsign in flightPaths) {
+        if (flightPaths[callsign] && flightPaths[callsign].polyline) {
+          map.removeLayer(flightPaths[callsign].polyline);
+        }
+      }
+      flightPaths = {};
+    }
+
+    // Remove all current position markers
+    function removeAllMarkers() {
+      for (const callsign in flightMarkers) {
+        if (flightMarkers[callsign]) {
+          map.removeLayer(flightMarkers[callsign]);
+        }
+      }
+      flightMarkers = {};
+    }
+
+    // Remove all data point markers
+    function removeAllDataMarkers() {
+      for (const callsign in dataMarkers) {
+        if (dataMarkers[callsign]) {
+          dataMarkers[callsign].forEach(marker => {
+            map.removeLayer(marker);
+          });
+        }
+      }
+      dataMarkers = {};
+      shownDataPoints = {};
+    }
+
+    // Get global time range
+    function getGlobalTimeRange() {
+      if (globalMinTime && globalMaxTime) return { minTime: globalMinTime, maxTime: globalMaxTime };
+
+      let minTime = Infinity;
+      let maxTime = -Infinity;
+
+      for (const callsign in flightData) {
+        const records = flightData[callsign];
+        records.forEach(record => {
+          const time = getTimestampValue(record);
+          if (time) {
+            minTime = Math.min(minTime, time);
+            maxTime = Math.max(maxTime, time);
+          }
+        });
+      }
+
+      globalMinTime = minTime;
+      globalMaxTime = maxTime;
+      return { minTime, maxTime };
+    }
+
+    // Format timestamp for display
+    function formatTimestamp(time) {
+      if (!time) return 'N/A';
+      const date = new Date(time);
+      return date.toLocaleString('pt-PT', { 
+        timeZone: 'Europe/Lisbon',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+    }
+
+    // Format altitude for display
+    function formatAltitude(altitudeFeet) {
+      const meters = feetToMeters(altitudeFeet);
+      if (!meters && meters !== 0) return 'N/A';
+      return `${meters} m`;
+    }
+
+    // Format climb rate for display
+    function formatClimbRate(rateFeet) {
+      if (!rateFeet && rateFeet !== 0) return 'N/A';
+      const rateMeters = Math.round(rateFeet * 0.3048);
+      const arrow = rateMeters > 0 ? '▲' : (rateMeters < 0 ? '▼' : '');
+      return `${arrow} ${Math.abs(rateMeters)} m/min`;
+    }
+
+    // Update display based on progress
+    function updateDisplay(progress) {
+      const { minTime, maxTime } = getGlobalTimeRange();
+      const currentTime = minTime + (maxTime - minTime) * progress;
+      const percent = Math.round(progress * 100);
+
+      document.getElementById('timeDisplay').textContent = formatTimestamp(currentTime);
+      document.getElementById('progressFill').style.width = `${percent}%`;
+
+      let activeFlights = 0;
+
+      for (const callsign in flightData) {
+        const records = flightData[callsign];
+
+        updateFlightPath(callsign, records, currentTime);
+        updateDataMarkers(callsign, records, currentTime);
+
+        const positionInfo = getPositionAndIndexAtTime(records, currentTime);
+
+        if (positionInfo && positionInfo.position) {
+          activeFlights++;
+          const position = positionInfo.position;
+          const hasMoved = !positionInfo.isFirst;
+          const isLastPosition = positionInfo.isLast;
+          const shouldShowLabel = hasMoved && !isLastPosition;
+
+          const tooltipContent = `${callsign}<br>${formatAltitude(position.record.altitude)}<br>${formatClimbRate(position.record.climbing_rate)}`;
+
+          if (flightMarkers[callsign]) {
+            flightMarkers[callsign].setLatLng([position.lat, position.lng]);
+
+            if (shouldShowLabel) {
+              flightMarkers[callsign].unbindTooltip();
+              flightMarkers[callsign].bindTooltip(tooltipContent, {
+                permanent: true,
+                direction: 'top',
+                offset: [0, -10],
+                className: 'custom-tooltip'
+              });
+            } else {
+              flightMarkers[callsign].unbindTooltip();
+            }
+
+            flightMarkers[callsign].bindPopup(`
+              <b>✈️ Call sign:</b> ${position.record.call_sign || callsign}<br>
+              <b>📅 Data:</b> ${formatTimestamp(currentTime)}<br>
+              <b>📊 Altitude:</b> ${formatAltitude(position.record.altitude)}<br>
+              <b>⚡ Velocidade:</b> ${Math.round(position.record.velocidade || 0)} knots<br>
+              <b>📈 Razão de subida:</b> ${formatClimbRate(position.record.climbing_rate)}
+            `);
+          } else {
+            const markerColor = getColorForCallsign(callsign);
+            const marker = L.circleMarker([position.lat, position.lng], {
+              radius: 8,
+              color: markerColor,
+              fillColor: markerColor,
+              fillOpacity: 0.9,
+              weight: 3
+            }).addTo(map);
+
+            if (shouldShowLabel) {
+              marker.bindTooltip(tooltipContent, {
+                permanent: true,
+                direction: 'top',
+                offset: [0, -10],
+                className: 'custom-tooltip'
+              });
+            }
+
+            marker.bindPopup(`
+              <b>✈️ Call sign:</b> ${position.record.call_sign || callsign}<br>
+              <b>📅 Data:</b> ${formatTimestamp(currentTime)}<br>
+              <b>📊 Altitude:</b> ${formatAltitude(position.record.altitude)}<br>
+              <b>⚡ Velocidade:</b> ${Math.round(position.record.velocidade || 0)} knots<br>
+              <b>📈 Razão de subida:</b> ${formatClimbRate(position.record.climbing_rate)}
+            `);
+
+            flightMarkers[callsign] = marker;
+          }
+        } else if (flightMarkers[callsign]) {
+          map.removeLayer(flightMarkers[callsign]);
+          delete flightMarkers[callsign];
+        }
+      }
+
+      document.getElementById('stats').innerHTML = `Voos ativos: ${activeFlights}<br>Progresso: ${percent}%`;
+    }
+
+    // Animation functions
+    function startAnimation() {
+      if (isPlaying) return;
+
+      isPlaying = true;
+      const startTime = performance.now();
+      const startProgress = currentProgress;
+
+      function animate(currentTime) {
+        if (!isPlaying) return;
+
+        const elapsed = (performance.now() - startTime) * speed;
+        const animationDuration = 360000;
+        const newProgress = Math.min(1, startProgress + (elapsed / animationDuration));
+
+        if (newProgress > currentProgress) {
+          currentProgress = newProgress;
+          updateDisplay(currentProgress);
+        }
+
+        if (currentProgress >= 1) {
+          pauseAnimation();
+        } else {
+          animationFrameId = requestAnimationFrame(animate);
+        }
+      }
+
+      animationFrameId = requestAnimationFrame(animate);
+    }
+
+    function pauseAnimation() {
+      isPlaying = false;
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
+    }
+
+    function resetAnimation() {
+      pauseAnimation();
+      currentProgress = 0;
+      removeAllMarkers();
+      removeAllDataMarkers();
+      removeAllFlightPaths();
+      updateDisplay(0);
+    }
+
+    // Initialize map and load data
+    async function initializeMap() {
+      try {
+        const response = await fetch('/flightPaths?dia=' + dia);
+        flightData = await response.json();
+        console.log('Dados carregados:', flightData);
+
+        map = L.map('map').setView([latitudeRef, longitudeRef], 11);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        referenceMarker = L.circleMarker([latitudeRef, longitudeRef], {
+          radius: 12,
+          color: '#FFD700',
+          fillColor: '#FFD700',
+          fillOpacity: 0.8,
+          weight: 3
+        }).addTo(map);
+
+        referenceMarker.bindTooltip('Ponto de Referência', { permanent: false, direction: 'top' });
+
+        updateDisplay(0);
+
+      } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+      }
+    }
+
+    // Event listeners
+    document.getElementById('playBtn').addEventListener('click', startAnimation);
+    document.getElementById('pauseBtn').addEventListener('click', pauseAnimation);
+    document.getElementById('resetBtn').addEventListener('click', resetAnimation);
+    document.getElementById('speedSlider').addEventListener('input', (e) => {
+      speed = parseFloat(e.target.value);
+      document.getElementById('speedValue').textContent = `${speed}x`;
+    });
+
+    document.getElementById('progressBar').addEventListener('click', (e) => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const width = rect.width;
+      const clickProgress = Math.min(1, Math.max(0, x / width));
+      currentProgress = clickProgress;
+      updateDisplay(currentProgress);
+      if (isPlaying) {
+        pauseAnimation();
+        startAnimation();
+      }
+    });
+
+    initializeMap();
   </script>
 </body>
 </html>

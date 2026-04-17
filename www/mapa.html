@@ -563,7 +563,7 @@
           shownDataPoints[markerKey] = true;
           
           const altitudeMeters = feetToMeters(record.altitude);
-          const climbRateMeters = record.climbing_rate ? Math.round(record.climbing_rate * 0.3048) : null;
+          const climbRateMeters = record.climbing_rate ? Math.round(record.climbing_rate) : null;
           
           const marker = L.circleMarker([record.latitude, record.longitude], {
             radius: 4,
@@ -580,7 +580,7 @@
             <b>📍 Posição registada</b><br>
             <b>📊 Altitude:</b> ${altitudeMeters ? altitudeMeters + ' m' : 'N/A'}<br>
             <b>⚡ Velocidade:</b> ${Math.round(record.velocidade || 0)} knots<br>
-            <b>📈 Razão de subida:</b> ${climbRateMeters ? climbRateMeters + ' m/min' : 'N/A'}<br>
+            <b>📈 Razão de subida:</b> ${climbRateMeters ? climbRateMeters + ' m/s' : 'N/A'}<br>
             <b>🌍 Coordenadas:</b> ${record.latitude.toFixed(4)}, ${record.longitude.toFixed(4)}
           `);
           
@@ -681,9 +681,9 @@
     // Format climb rate for display
     function formatClimbRate(rateFeet) {
       if (!rateFeet && rateFeet !== 0) return 'N/A';
-      const rateMeters = Math.round(rateFeet * 0.3048);
+      const rateMeters = Math.round(rateFeet);
       const arrow = rateMeters > 0 ? '▲' : (rateMeters < 0 ? '▼' : '');
-      return `${arrow} ${Math.abs(rateMeters)} m/min`;
+      return `${arrow} ${Math.abs(rateMeters)} m/s`;
     }
     
     // Update display based on progress

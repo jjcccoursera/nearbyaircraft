@@ -44,6 +44,7 @@ cache = {
 }
 CACHE_DURATION = 30  # seconds
 
+# https://chat.deepseek.com/a/chat/s/a8b5ad0e-1ee1-4f57-a6c5-59c3df57761b
 @app.after_request
 def add_cors_headers(response):
     response.headers['Access-Control-Allow-Origin'] = '*'
